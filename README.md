@@ -56,41 +56,6 @@ npm run dev
 
 ---
 
-## 📌 API Endpoints
-
-### **🔹 Authentication Routes**
-| Method | Route        | Description            |
-|--------|-------------|------------------------|
-| POST   | /api/register | Register a new user  |
-| POST   | /api/login  | Login and get a token |
-
-### **🔹 Example Request: Register User**
-```sh
-POST /api/register
-{
-  "email": "user@example.com",
-  "password": "securepassword"
-}
-```
-
-### **🔹 Example Request: Login User**
-```sh
-POST /api/login
-{
-  "email": "user@example.com",
-  "password": "securepassword"
-}
-```
-_Response:_
-```json
-{
-  "message": "Login successful",
-  "token": "your_jwt_token"
-}
-```
-
----
-
 ## 📌 Project Structure
 ```
 📂 src
