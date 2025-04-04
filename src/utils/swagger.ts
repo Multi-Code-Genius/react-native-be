@@ -14,12 +14,26 @@ const swaggerDefinition = {
       url: "http://localhost:5000",
       description: "Local server"
     }
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT"
+      }
+    }
+  },
+  security: [
+    {
+      bearerAuth: []
+    }
   ]
 };
 
 const options = {
-  swaggerDefinition,
-  apis: ["./src/routes/*.ts"]
+  definition: swaggerDefinition,
+  apis: ["./src/routes/*.ts", "./src/controllers/*.ts"]
 };
 
 const swaggerSpec = swaggerJSDoc(options);

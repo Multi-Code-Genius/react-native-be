@@ -4,8 +4,11 @@ import { PORT } from "./config/env";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import bodyParser from "body-parser";
 import authRoutes from "./routes/auth.routes";
 import errorHandler from "./middlewares/errorHandler";
+import { setupSwagger } from "./utils/swagger";
+import "./types/express";
 
 dotenv.config();
 
@@ -14,6 +17,9 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
+
+setupSwagger(app);
+app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);
 app.use(errorHandler);
