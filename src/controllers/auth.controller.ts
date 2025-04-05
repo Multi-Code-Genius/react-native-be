@@ -3,6 +3,9 @@ import { prisma } from "../utils/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserData } from "../types/user";
+import crypto from "crypto";
+import { transporter } from "../utils/sendEmail";
+import { EMAIL_USER, SECRET_KEY } from "../config/env";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -27,7 +30,7 @@ export const register = async (req: Request, res: Response) => {
       }
     });
 
-    if (!process.env.JWT_SECRET) {
+    if (!SECRET_KEY) {
       console.error("JWT_SECRET is not set in the environment variables");
       res.status(500).json({ message: "Internal server error" });
       return;
@@ -35,7 +38,7 @@ export const register = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { userId: user.id, name: user.name, email: user.email },
-      process.env.JWT_SECRET,
+      SECRET_KEY,
       {
         expiresIn: "1d"
       }
@@ -64,7 +67,7 @@ export const login = async (req: Request, res: Response) => {
       return;
     }
 
-    if (!process.env.JWT_SECRET) {
+    if (!SECRET_KEY) {
       console.error("JWT_SECRET is not set in the environment variables");
       res.status(500).json({ message: "Internal server error" });
       return;
@@ -72,7 +75,7 @@ export const login = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { userId: user.id, name: user.name, email: user.email },
-      process.env.JWT_SECRET,
+      SECRET_KEY,
       {
         expiresIn: "1d"
       }
@@ -84,5 +87,87 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({
       message: error instanceof Error ? error.message : "Error logging in"
     });
+  }
+};
+
+export const requestPasswordReset = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = new Date(Date.now() + 1000 * 60 * 15);
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetToken: token,
+        resetTokenExpiry: expiry
+      }
+    });
+
+    const resetLink = `http://192.168.1.14:5000/reset-redirect?token=${token}`;
+
+    await transporter.sendMail({
+      from: `"Jay" <${EMAIL_USER}>`,
+      to: email,
+      subject: "Password Reset Link",
+      html: `
+        <h2>Password Reset</h2>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetLink}">${resetLink}</a>
+        <p>This link will expire in 15 minutes.</p>
+      `
+    });
+
+    return res.status(200).json({ message: "Reset link sent to your email" });
+  } catch (error: any) {
+    console.error("Reset Error:", error.message);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Token and new password are required" });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: {
+          gte: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      }
+    });
+
+    return res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };

@@ -8,17 +8,19 @@ generator client {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  password     String
-  name         String?
-  profile_pic  String?
-  dob          DateTime?     
-  mobileNumber String? @unique 
-  location     String?      
-  status       String  @default("active") 
-  createdAt    DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password         String
+  name             String?
+  profile_pic      String?
+  dob              DateTime?     
+  mobileNumber     String? @unique 
+  location         String?      
+  status           String  @default("active") 
+  
+  resetToken       String?   
+  resetTokenExpiry DateTime?  
 
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt @default(now())
 }
-

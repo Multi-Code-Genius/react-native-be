@@ -1,5 +1,10 @@
 import express, { RequestHandler } from "express";
-import { register, login } from "../controllers/auth.controller";
+import {
+  register,
+  login,
+  requestPasswordReset,
+  resetPassword
+} from "../controllers/auth.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
 const router = express.Router();
@@ -75,7 +80,12 @@ const router = express.Router();
  *         description: Internal server error
  */
 
-router.post("/signup", register as RequestHandler);
-router.post("/login", login as RequestHandler);
+router.post("/signup", register as unknown as RequestHandler);
+router.post("/login", login as unknown as RequestHandler);
+router.post(
+  "/reset-password",
+  requestPasswordReset as unknown as RequestHandler
+);
+router.post("/new-password", resetPassword as unknown as RequestHandler);
 
 export default router;

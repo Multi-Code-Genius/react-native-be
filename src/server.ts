@@ -24,6 +24,13 @@ app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+
+app.get("/reset-redirect", (req, res) => {
+  const { token } = req.query;
+  const deepLink = `initialproject://reset-password/${token}`;
+  res.redirect(deepLink);
+});
+
 app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

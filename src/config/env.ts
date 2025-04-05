@@ -6,3 +6,5 @@ export const NODE_ENV = process.env.NODE_ENV;
 export const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME!;
 export const API_KEY = process.env.CLOUDINARY_API_KEY!;
 export const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
+export const EMAIL_USER = process.env.EMAIL_USER!;
+export const EMAIL_PASS = process.env.EMAIL_PASS!;
