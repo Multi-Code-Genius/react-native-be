@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
-import bcrypt from "bcryptjs";
 import { UserData } from "../types/user";
 
 export const getProfile = async (req: Request, res: Response) => {
@@ -30,7 +29,8 @@ export const getProfile = async (req: Request, res: Response) => {
 
 export const UpdateUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, password }: UserData = req.body;
+    const { name, email, location, mobileNumber, status, dob }: UserData =
+      req.body;
 
     if (!req.user || !req.user.userId) {
       res.status(401).json({ message: "Unauthorized" });
@@ -52,9 +52,16 @@ export const UpdateUser = async (req: Request, res: Response) => {
 
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateData.password = hashedPassword;
+    if (location) updateData.location = location;
+    if (mobileNumber) updateData.mobileNumber = mobileNumber;
+    if (status) updateData.status = status;
+
+    if (dob) {
+      const parsedDob = new Date(dob);
+      if (isNaN(parsedDob.getTime())) {
+        return res.status(400).json({ error: "Invalid date format for dob" });
+      }
+      updateData.dob = parsedDob;
     }
 
     const updatedUser = await prisma.user.update({
@@ -116,7 +123,9 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
       data: { profile_pic: imageUrl }
     } as any);
 
-    res.json({ success: true, imageUrl, user });
+    res
+      .status(200)
+      .json({ message: "Profile Picture uploaded successfully", user });
   } catch (error) {
     res.status(500).json({
       success: false,

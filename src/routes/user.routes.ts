@@ -10,14 +10,55 @@ import upload from "../helper/upload";
 
 const router = express.Router();
 
-// PUT /Update User route
+// GET PROFILE /Get User route
 /**
  * @swagger
- * /api/auth/user:
- *   patch:
- *     summary: Update the authenticated user's information
+ * /api/user:
+ *   get:
  *     tags:
- *       - Update User
+ *       - User
+ *     summary: Get user details
+ *     description: Fetch the authenticated user's details using the provided JWT token.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 mobileNumber:
+ *                   type: string
+ *                 location:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                 dob:
+ *                   type: string
+ *                   format: date
+ *       401:
+ *         description: Unauthorized (Invalid or missing token)
+ *       500:
+ *         description: Internal server error
+ */
+
+// Update User /UPDATE User route
+/**
+ * @swagger
+ * /api/user/update:
+ *   patch:
+ *     summary: Update user profile
+ *     description: Updates user's profile data such as name, email, dob, mobile number, location, and status.
+ *     tags:
+ *       - User
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -27,25 +68,93 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
  *               email:
  *                 type: string
  *                 format: email
- *                 example: johndoe@example.com
- *               password:
+ *                 example: jayrajshakha@gmail.com
+ *               name:
  *                 type: string
- *                 example: mySecret123
+ *                 example: Jay
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *                 example: 2001-11-20
+ *               mobileNumber:
+ *                 type: string
+ *                 example: "9876543210"
+ *               location:
+ *                 type: string
+ *                 example: Surat
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive, suspended]
+ *                 example: active
  *     responses:
  *       200:
  *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User updated successfully
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
  *       400:
- *         description: Bad request (e.g., email already in use)
+ *         description: Invalid input
  *       401:
  *         description: Unauthorized
- *       404:
- *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+
+// GET upload profile
+/**
+ * @swagger
+ * /api/user/upload-profile/{id}:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Upload a user profile picture
+ *     description: Uploads a profile picture for the specified user.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profile_pic:
+ *                 type: string
+ *                 format: binary
+ *                 description: Profile picture file (PNG, JPG)
+ *     responses:
+ *       200:
+ *         description: Profile picture uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 filePath:
+ *                   type: string
+ *       400:
+ *         description: Bad request (Invalid file format or missing file)
+ *       401:
+ *         description: Unauthorized (Invalid or missing token)
  *       500:
  *         description: Internal server error
  */
@@ -57,7 +166,7 @@ const router = express.Router();
  *   delete:
  *     summary: Delete a user by ID
  *     tags:
- *       - Users
+ *       - User
  *     parameters:
  *       - name: id
  *         in: path

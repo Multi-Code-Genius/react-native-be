@@ -11,7 +11,7 @@ const router = express.Router();
  *   post:
  *     summary: Register a new user
  *     tags:
- *       - SignUp
+ *       - AUTH
  *     requestBody:
  *       required: true
  *       content:
@@ -42,7 +42,7 @@ const router = express.Router();
  *   post:
  *     summary: User login
  *     tags:
- *       - Login
+ *       - AUTH
  *     requestBody:
  *       required: true
  *       content:
@@ -71,80 +71,6 @@ const router = express.Router();
  *         description: Bad request
  *       401:
  *         description: Unauthorized
- *       500:
- *         description: Internal server error
- */
-
-// PUT /Update User route
-/**
- * @swagger
- * /api/auth/user:
- *   patch:
- *     summary: Update the authenticated user's information
- *     tags:
- *       - Update User
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
- *               email:
- *                 type: string
- *                 format: email
- *                 example: johndoe@example.com
- *               password:
- *                 type: string
- *                 example: mySecret123
- *     responses:
- *       200:
- *         description: User updated successfully
- *       400:
- *         description: Bad request (e.g., email already in use)
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-
-// DELETE /Delete User route
-/**
- * @swagger
- * /user/{id}:
- *   delete:
- *     summary: Delete a user by ID
- *     tags:
- *       - Users
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: ID of the user to delete
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: User deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: User deleted successfully.
- *       400:
- *         description: Invalid user ID
- *       404:
- *         description: User not found
  *       500:
  *         description: Internal server error
  */
