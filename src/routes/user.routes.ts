@@ -1,79 +1,14 @@
 import express, { RequestHandler } from "express";
-import { register, login } from "../controllers/auth.controller";
+import {
+  UpdateUser,
+  deleteUser,
+  getProfile,
+  uploadProfilePicture
+} from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
+import upload from "../helper/upload";
 
 const router = express.Router();
-
-// POST /register route
-/**
- * @swagger
- * /api/auth/signup:
- *   post:
- *     summary: Register a new user
- *     tags:
- *       - SignUp
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *               name:
- *                 type: string
- *     responses:
- *       200:
- *         description: User successfully registered
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-
-// POST /login route
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: User login
- *     tags:
- *       - Login
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 token:
- *                   type: string
- *       400:
- *         description: Bad request
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Internal server error
- */
 
 // PUT /Update User route
 /**
@@ -149,7 +84,13 @@ const router = express.Router();
  *         description: Internal server error
  */
 
-router.post("/signup", register as RequestHandler);
-router.post("/login", login as RequestHandler);
+router.patch("/update", authMiddleware, UpdateUser as RequestHandler);
+router.delete("/delete", authMiddleware, deleteUser as RequestHandler);
+router.get("/", authMiddleware, getProfile as RequestHandler);
+router.post(
+  "/upload-profile/:userId",
+  upload.single("profile_pic"),
+  uploadProfilePicture as RequestHandler
+);
 
 export default router;
