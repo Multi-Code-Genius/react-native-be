@@ -8,3 +8,4 @@ export const API_KEY = process.env.CLOUDINARY_API_KEY!;
 export const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
 export const EMAIL_USER = process.env.EMAIL_USER!;
 export const EMAIL_PASS = process.env.EMAIL_PASS!;
+export const BASE_URL = process.env.BASE_URL;

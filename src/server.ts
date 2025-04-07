@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { PORT } from "./config/env";
+import { PORT, BASE_URL } from "./config/env";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -33,5 +33,5 @@ app.get("/reset-redirect", (req, res) => {
 
 app.use(errorHandler);
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${BASE_URL}`);
 });

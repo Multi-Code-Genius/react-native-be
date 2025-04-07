@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { UserData } from "../types/user";
 import crypto from "crypto";
 import { transporter } from "../utils/sendEmail";
-import { EMAIL_USER, SECRET_KEY } from "../config/env";
+import { EMAIL_USER, SECRET_KEY, BASE_URL } from "../config/env";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -109,7 +109,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       }
     });
 
-    const resetLink = `http://192.168.1.14:5000/reset-redirect?token=${token}`;
+    const resetLink = `${BASE_URL}/reset-redirect?token=${token}`;
 
     await transporter.sendMail({
       from: `"Jay" <${EMAIL_USER}>`,
