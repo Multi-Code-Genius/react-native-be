@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { BASE_URL, PORT } from "./config/env";
+import { PORT } from "./config/env";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";

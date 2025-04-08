@@ -74,6 +74,7 @@ export const UpdateUser = async (req: Request, res: Response) => {
       .json({ message: "User updated successfully", user: updatedUser });
   } catch (error: any) {
     console.error(error);
+    console.log("error", error);
     if (error.code === "P2002") {
       res.status(400).json({ message: "Email already in use" });
       return;
@@ -131,5 +132,25 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error"
     });
+  }
+};
+
+export const getAllUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const users = await prisma.user.findMany();
+
+    res.status(200).json({
+      message: "User data fetched successfully.",
+      users
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({ message });
   }
 };

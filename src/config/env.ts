@@ -9,3 +9,4 @@ export const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
 export const EMAIL_USER = process.env.EMAIL_USER!;
 export const EMAIL_PASS = process.env.EMAIL_PASS!;
 export const BASE_URL = process.env.BASE_URL;
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;

@@ -2,6 +2,7 @@ import express, { RequestHandler } from "express";
 import {
   UpdateUser,
   deleteUser,
+  getAllUser,
   getProfile,
   uploadProfilePicture
 } from "../controllers/user.controller";
@@ -201,5 +202,6 @@ router.post(
   upload.single("profile_pic"),
   uploadProfilePicture as RequestHandler
 );
+router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
 
 export default router;

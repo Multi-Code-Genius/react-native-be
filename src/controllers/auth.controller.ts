@@ -5,7 +5,14 @@ import jwt from "jsonwebtoken";
 import { UserData } from "../types/user";
 import crypto from "crypto";
 import { transporter } from "../utils/sendEmail";
-import { EMAIL_USER, SECRET_KEY, BASE_URL } from "../config/env";
+import {
+  EMAIL_USER,
+  SECRET_KEY,
+  BASE_URL,
+  GOOGLE_CLIENT_ID
+} from "../config/env";
+import { OAuth2Client } from "google-auth-library";
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -25,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        password: hashedPassword ?? "",
         ...(name && { name })
       }
     });
@@ -40,7 +47,7 @@ export const register = async (req: Request, res: Response) => {
       { userId: user.id, name: user.name, email: user.email },
       SECRET_KEY,
       {
-        expiresIn: "1d"
+        expiresIn: "7d"
       }
     );
 
@@ -62,7 +69,7 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, user.password ?? ""))) {
       res.status(401).json({ message: "Invalid credentials" });
       return;
     }
@@ -77,7 +84,7 @@ export const login = async (req: Request, res: Response) => {
       { userId: user.id, name: user.name, email: user.email },
       SECRET_KEY,
       {
-        expiresIn: "1d"
+        expiresIn: "7d"
       }
     );
 
@@ -169,5 +176,49 @@ export const resetPassword = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Reset password error:", error);
     return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const googleLogin = async (req: Request, res: Response) => {
+  const { idToken } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) return res.status(401).send("Invalid token");
+
+    const { email, name, picture } = payload;
+
+    let existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      res.status(400).json({ message: "Email already registered" });
+      return;
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        email: email ?? "",
+        profile_pic: picture ?? "",
+        ...(name && { name })
+      }
+    });
+
+    const token = jwt.sign(
+      { userId: newUser.id, name: newUser.name, email: newUser.email },
+      SECRET_KEY!,
+      {
+        expiresIn: "7d"
+      }
+    );
+
+    res.status(200).json({ message: "User successfully Signup", token });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Login failed");
   }
 };
