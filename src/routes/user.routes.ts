@@ -194,6 +194,42 @@ const router = express.Router();
  *         description: Internal server error
  */
 
+/**
+ * @swagger
+ * /api/user/all-user:
+ *   get:
+ *     summary: Get all users
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []  # If you're using JWT auth
+ *     responses:
+ *       200:
+ *         description: User data fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User data fetched successfully.
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error
+ */
+
 router.patch("/update", authMiddleware, UpdateUser as RequestHandler);
 router.delete("/delete", authMiddleware, deleteUser as RequestHandler);
 router.get("/", authMiddleware, getProfile as RequestHandler);
