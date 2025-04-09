@@ -10,14 +10,42 @@ export const getProfile = async (req: Request, res: Response) => {
     }
 
     const id = req.user.userId;
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({
+      where: {
+        id
+      },
+      include: {
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        },
+        likes: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        },
+        videos: true
+      }
+    });
 
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
 
-    console.log("user", user);
     res.status(200).json({ message: "User Data Fetched successfully.", user });
   } catch (error: unknown) {
     console.error("user error:", error);

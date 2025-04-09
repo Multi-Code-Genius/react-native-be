@@ -12,6 +12,16 @@ const storage = new CloudinaryStorage({
   } as any
 });
 
-const upload = multer({ storage });
+const videoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    resource_type: "video",
+    folder: "reels-videos",
+    allowed_formats: ["mp4", "mov", "webm"],
+    public_id: (req: unknown, file: { originalname: string }) =>
+      `video-${Date.now()}-${file.originalname}`
+  } as any
+});
 
-export default upload;
+export const uploadVideo = multer({ storage: videoStorage });
+export const upload = multer({ storage });

@@ -7,6 +7,7 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
+import videoRoutes from "./routes/video.route";
 import errorHandler from "./middlewares/errorHandler";
 import { setupSwagger } from "./utils/swagger";
 import "./types/express";
@@ -24,6 +25,7 @@ app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/video", videoRoutes);
 
 app.get("/reset-redirect", (req, res) => {
   const { token } = req.query;

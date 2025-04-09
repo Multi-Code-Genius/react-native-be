@@ -7,9 +7,19 @@ import {
   uploadProfilePicture
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import upload from "../helper/upload";
+import { upload } from "../helper/upload";
 
 const router = express.Router();
+
+router.patch("/update", authMiddleware, UpdateUser as RequestHandler);
+router.delete("/delete", authMiddleware, deleteUser as RequestHandler);
+router.get("/", authMiddleware, getProfile as RequestHandler);
+router.post(
+  "/upload-profile/:userId",
+  upload.single("profile_pic"),
+  uploadProfilePicture as RequestHandler
+);
+router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
 
 // GET PROFILE /Get User route
 /**
@@ -229,15 +239,5 @@ const router = express.Router();
  *                   type: string
  *                   example: Internal server error
  */
-
-router.patch("/update", authMiddleware, UpdateUser as RequestHandler);
-router.delete("/delete", authMiddleware, deleteUser as RequestHandler);
-router.get("/", authMiddleware, getProfile as RequestHandler);
-router.post(
-  "/upload-profile/:userId",
-  upload.single("profile_pic"),
-  uploadProfilePicture as RequestHandler
-);
-router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
 
 export default router;
