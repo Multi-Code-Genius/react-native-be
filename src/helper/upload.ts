@@ -1,6 +1,7 @@
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 import cloudinary from "./cloudinary";
+import path from "path";
 
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -18,8 +19,10 @@ const videoStorage = new CloudinaryStorage({
     resource_type: "video",
     folder: "reels-videos",
     allowed_formats: ["mp4", "mov", "webm"],
-    public_id: (req: unknown, file: { originalname: string }) =>
-      `video-${Date.now()}-${file.originalname}`
+    public_id: (req: unknown, file: { originalname: string }) => {
+      const nameWithoutExt = path.parse(file.originalname).name;
+      return `video-${Date.now()}-${nameWithoutExt}`;
+    }
   } as any
 });
 

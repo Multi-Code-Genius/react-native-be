@@ -6,10 +6,15 @@ export const uploadVideos = async (req: Request, res: Response) => {
     const { title, description } = req.body;
     const videoUrl = req.file?.path ?? "";
 
+    const thumbnail = videoUrl
+      .replace("/upload/", "/upload/so_1,c_fill,w_300,h_300/")
+      .replace(/\.(webm|mp4|mov)$/, ".jpg");
+
     const newVideo = await prisma.video.create({
       data: {
         title,
         description,
+        thumbnail,
         videoUrl,
         userId: req.user?.userId ?? ""
       }
