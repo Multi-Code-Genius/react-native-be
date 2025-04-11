@@ -8,7 +8,11 @@ declare global {
         email?: string;
         name?: string;
       };
-      file?: Express.Multer.File;
+      files?:
+        | {
+            [fieldname: string]: Multer.File[];
+          }
+        | Multer.File[];
     }
   }
 }
