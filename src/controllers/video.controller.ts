@@ -125,3 +125,40 @@ export const commentsVideos = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message || "Comment failed" });
   }
 };
+
+export const getVideoById = async (req: Request, res: Response) => {
+  try {
+    const video = await prisma.video.findUnique({
+      where: { id: req.params.id },
+      include: {
+        likes: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(200).json({ message: "Video Fetched", video });
+  } catch (error: any) {
+    console.error("Video Fetched error:", error);
+    res.status(500).json({ error: error.message || "video failed" });
+  }
+};

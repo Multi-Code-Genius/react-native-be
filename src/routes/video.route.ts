@@ -3,6 +3,7 @@ import { uploadVideo } from "../helper/upload";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   commentsVideos,
+  getVideoById,
   getVideos,
   likeVideos,
   uploadVideos
@@ -19,6 +20,7 @@ router.post(
 router.get("/", authMiddleware, getVideos);
 router.get("/like/:id", authMiddleware, likeVideos);
 router.post("/comments/:id", authMiddleware, commentsVideos);
+router.get("/:id", authMiddleware, getVideoById);
 
 export default router;
 
@@ -222,4 +224,48 @@ export default router;
  *         description: Video not found
  *       500:
  *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/video/{id}:
+ *   get:
+ *     tags:
+ *       - Video
+ *     summary: Get a video by ID
+ *     description: Fetch a single video by its unique ID. Requires JWT authentication.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: The unique ID of the video
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Video fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Video Fetched
+ *                 video:
+ *                   $ref: '#/components/schemas/Video'
+ *       401:
+ *         description: Unauthorized - JWT missing or invalid
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: video failed
  */
