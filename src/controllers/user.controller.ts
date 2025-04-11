@@ -182,3 +182,39 @@ export const getAllUser = async (
     res.status(500).json({ message });
   }
 };
+
+export const getUserByid = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: {
+        likes: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        },
+        videos: true
+      }
+    });
+
+    res.status(200).json({
+      message: "User data fetched successfully.",
+      user
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({ message });
+  }
+};

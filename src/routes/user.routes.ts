@@ -4,6 +4,7 @@ import {
   deleteUser,
   getAllUser,
   getProfile,
+  getUserByid,
   uploadProfilePicture
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -20,6 +21,7 @@ router.post(
   uploadProfilePicture as RequestHandler
 );
 router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
+router.get("/:id", authMiddleware, getUserByid as RequestHandler);
 
 // GET PROFILE /Get User route
 /**
@@ -238,6 +240,46 @@ router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
  *                 message:
  *                   type: string
  *                   example: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/user/{id}:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user by ID
+ *     description: Fetch user details by ID using the provided JWT token.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: User ID (UUID)
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: f645da0c-caac-4d96-8036-7cc95b0633ef
+ *                 name:
+ *                   type: string
+ *                   example: JAY R
+ *                 email:
+ *                   type: string
+ *                   example: jay@example.com
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       404:
+ *         description: User not found
  */
 
 export default router;

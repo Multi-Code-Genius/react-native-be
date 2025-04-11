@@ -33,6 +33,17 @@ app.get("/reset-redirect", (req, res) => {
   res.redirect(deepLink);
 });
 
+app.get("/", (req, res) => {
+  try {
+    res.status(200).json("Welcome to our APIs");
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
 app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
