@@ -7,6 +7,6 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types", "src/types/express.ts"]
+    "typeRoots": ["./node_modules/@types", "src/types"]
   }
 }

@@ -1,3 +1,5 @@
+import { Multer } from "multer";
+
 declare global {
   namespace Express {
     interface Request {
@@ -6,6 +8,7 @@ declare global {
         email?: string;
         name?: string;
       };
+      file?: Express.Multer.File;
     }
   }
 }
