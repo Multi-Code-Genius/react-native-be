@@ -7,7 +7,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/server.js",
-    "postinstall": "npm install --legacy-peer-deps"
+    "postinstall": ""
   },
   "keywords": [],
   "author": "",
