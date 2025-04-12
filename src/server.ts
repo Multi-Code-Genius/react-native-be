@@ -35,7 +35,7 @@ app.get("/reset-redirect", (req, res) => {
 
 app.get("/", (req, res) => {
   try {
-    res.status(200).json("Welcome to our APIs");
+    res.status(200).json("Welcome React Native Backend APIs");
   } catch (error) {
     res.status(500).json({
       success: false,
