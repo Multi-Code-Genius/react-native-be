@@ -3,13 +3,23 @@ import multer from "multer";
 import cloudinary from "./cloudinary";
 import path from "path";
 
-const storage = new CloudinaryStorage({
+const profileStorage = new CloudinaryStorage({
   cloudinary,
   params: {
     resource_type: "auto",
     folder: "profile-pics",
     allowed_formats: ["jpg", "png"],
     transformation: [{ width: 300, height: 300, crop: "limit" }]
+  } as any
+});
+
+const postStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    resource_type: "auto",
+    folder: "post",
+    allowed_formats: ["jpg", "png"],
+    transformation: [{ width: 1080, height: 1080, crop: "limit" }]
   } as any
 });
 
@@ -27,4 +37,5 @@ const videoStorage = new CloudinaryStorage({
 });
 
 export const uploadVideo = multer({ storage: videoStorage });
-export const upload = multer({ storage });
+export const uploadProfile = multer({ storage: profileStorage });
+export const uploadPost = multer({ storage: postStorage });

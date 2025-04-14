@@ -12,6 +12,10 @@ const swaggerDefinition = {
   servers: [
     {
       url: "https://reactnativebe-ympr.onrender.com",
+      description: "deploy server"
+    },
+    {
+      url: "http://localhost:5000",
       description: "Local server"
     }
   ],
