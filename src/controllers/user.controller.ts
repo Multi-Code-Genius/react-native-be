@@ -219,3 +219,45 @@ export const getUserByid = async (
     res.status(500).json({ message });
   }
 };
+
+export const searchUser = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string;
+
+    if (!query || query.trim() === "") {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: query,
+              mode: "insensitive"
+            }
+          },
+          {
+            email: {
+              contains: query,
+              mode: "insensitive"
+            }
+          }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile_pic: true
+      }
+    });
+
+    res.status(200).json({ message: "Search results", users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    res.status(500).json({ message });
+  }
+};

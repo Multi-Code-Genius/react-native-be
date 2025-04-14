@@ -5,6 +5,7 @@ import {
   getAllUser,
   getProfile,
   getUserByid,
+  searchUser,
   uploadProfilePicture
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -21,7 +22,8 @@ router.post(
   uploadProfilePicture as RequestHandler
 );
 router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
-router.get("/:id", authMiddleware, getUserByid as RequestHandler);
+router.get("/search", authMiddleware, searchUser as RequestHandler);
+router.get("/user-data/:id", authMiddleware, getUserByid as RequestHandler);
 
 // GET PROFILE /Get User route
 /**
@@ -244,7 +246,7 @@ router.get("/:id", authMiddleware, getUserByid as RequestHandler);
 
 /**
  * @swagger
- * /api/user/{id}:
+ * /api/user/user-data/{id}:
  *   get:
  *     tags:
  *       - User
@@ -280,6 +282,64 @@ router.get("/:id", authMiddleware, getUserByid as RequestHandler);
  *         description: Unauthorized - missing or invalid token
  *       404:
  *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /api/user/search:
+ *   get:
+ *     summary: Search users by name
+ *     description: Search for users whose names contain the provided query string.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name (or partial name) to search for
+ *     responses:
+ *       200:
+ *         description: List of matched users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Search Items
+ *                 Users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                         example: 22108fc2-c796-4893-ab4c-ccc1e446316c
+ *                       name:
+ *                         type: string
+ *                         example: Jay R
+ *                       email:
+ *                         type: string
+ *                         format: email
+ *                         example: jay@gmail.com
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2024-04-01T12:34:56Z
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2024-04-10T09:21:00Z
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       500:
+ *         description: Internal Server Error
  */
 
 export default router;

@@ -29,48 +29,32 @@ export const uploadVideos = async (req: Request, res: Response) => {
 
 export const getVideos = async (req: Request, res: Response) => {
   try {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
     const videos = await prisma.video.findMany({
-      orderBy: {
-        createdAt: "desc"
-      },
+      skip,
+      take: Number(limit),
+      orderBy: { createdAt: "desc" },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            profile_pic: true
-          }
-        },
+        user: { select: { id: true, name: true, profile_pic: true } },
         comments: {
           include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profile_pic: true
-              }
-            }
+            user: { select: { id: true, name: true, profile_pic: true } }
           }
         },
         likes: {
           include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profile_pic: true
-              }
-            }
+            user: { select: { id: true, name: true, profile_pic: true } }
           }
         }
-        // likes: true
       }
     });
 
-    res.status(200).json({ message: " Videos retrieved", videos });
+    res.status(200).json({ videos });
   } catch (error: any) {
-    console.error("Video upload error:", error);
-    res.status(500).json({ error: error.message || "Get failed" });
+    console.error("Video fetch error:", error);
+    res.status(500).json({ error: error.message || "Failed to fetch videos" });
   }
 };
 
