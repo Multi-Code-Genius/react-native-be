@@ -11,6 +11,7 @@ import videoRoutes from "./routes/video.route";
 import errorHandler from "./middlewares/errorHandler";
 import { setupSwagger } from "./utils/swagger";
 import "./types/express";
+import postRouter from "./routes/post.routes";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/video", videoRoutes);
+app.use("/api/post", postRouter);
 
 app.get("/reset-redirect", (req, res) => {
   const { token } = req.query;
@@ -35,7 +37,7 @@ app.get("/reset-redirect", (req, res) => {
 
 app.get("/", (req, res) => {
   try {
-    res.status(200).json("Welcome React Native Backend APIs");
+    res.status(200).json("Hello, This is React Native Backend Apis");
   } catch (error) {
     res.status(500).json({
       success: false,

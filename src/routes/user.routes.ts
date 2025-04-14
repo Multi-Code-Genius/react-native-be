@@ -8,7 +8,7 @@ import {
   uploadProfilePicture
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { upload } from "../helper/upload";
+import { uploadProfile } from "../helper/upload";
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.delete("/delete", authMiddleware, deleteUser as RequestHandler);
 router.get("/", authMiddleware, getProfile as RequestHandler);
 router.post(
   "/upload-profile/:userId",
-  upload.single("profile_pic"),
+  uploadProfile.single("profile_pic"),
   uploadProfilePicture as RequestHandler
 );
 router.get("/all-user", authMiddleware, getAllUser as RequestHandler);

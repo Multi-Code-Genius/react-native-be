@@ -37,7 +37,8 @@ export const getProfile = async (req: Request, res: Response) => {
             }
           }
         },
-        videos: true
+        videos: true,
+        posts: true
       }
     });
 
