@@ -131,6 +131,13 @@ export const getVideoById = async (req: Request, res: Response) => {
     const video = await prisma.video.findUnique({
       where: { id: req.params.id },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true
+          }
+        },
         likes: {
           include: {
             user: {
