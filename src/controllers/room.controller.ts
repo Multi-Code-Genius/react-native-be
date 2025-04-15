@@ -28,11 +28,20 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
         }
       },
       include: {
-        users: true
+        RoomUser: {
+          include: {
+            User: true
+          }
+        }
       }
     });
 
-    const availableRoom = nearbyRooms.find(
+    const roomWithUsers = nearbyRooms.map((room) => ({
+      ...room,
+      users: room.RoomUser.map((ru) => ru.User)
+    }));
+
+    const availableRoom = roomWithUsers.find(
       (room) => room.users.length < room.capacity
     );
 
@@ -75,7 +84,11 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
       const room = await prisma.room.findUnique({
         where: { id: availableRoom.id },
         include: {
-          users: true
+          RoomUser: {
+            include: {
+              User: true
+            }
+          }
         }
       });
 
@@ -95,14 +108,18 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
         },
         capacity: 5,
         status: "open",
-        users: {
+        RoomUser: {
           create: {
             userId
           }
         }
       },
       include: {
-        users: true
+        RoomUser: {
+          include: {
+            User: true
+          }
+        }
       }
     });
 

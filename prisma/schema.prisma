@@ -85,7 +85,7 @@ model Post {
 }
 
 model RejectedRoom {
-  id         String   @id
+  id         String   @id @default(uuid())
   userId     String
   roomId     String
   rejectedAt DateTime @default(now())
@@ -96,7 +96,7 @@ model RejectedRoom {
 }
 
 model Room {
-  id           String         @id
+  id           String         @id @default(uuid())
   platform     String
   location     Json
   status       String         @default("open")
@@ -107,7 +107,7 @@ model Room {
 }
 
 model RoomUser {
-  id       String   @id
+  id       String   @id @default(uuid())
   userId   String
   roomId   String
   joinedAt DateTime @default(now())
