@@ -156,3 +156,22 @@ export const getVideoById = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message || "video failed" });
   }
 };
+
+export const deleteVideo = async (req: Request, res: Response) => {
+  const { videoId } = req.params;
+
+  try {
+    await prisma.$transaction([
+      prisma.comment.deleteMany({ where: { videoId } }),
+      prisma.like.deleteMany({ where: { videoId } }),
+      prisma.video.delete({ where: { id: videoId } })
+    ]);
+
+    return res
+      .status(200)
+      .json({ message: "Video and related data deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to delete video" });
+  }
+};

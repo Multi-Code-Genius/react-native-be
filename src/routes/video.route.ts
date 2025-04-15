@@ -1,8 +1,9 @@
-import express from "express";
+import express, { RequestHandler } from "express";
 import { uploadVideo } from "../helper/upload";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   commentsVideos,
+  deleteVideo,
   getVideoById,
   getVideos,
   likeVideos,
@@ -21,6 +22,7 @@ router.get("/", authMiddleware, getVideos);
 router.get("/like/:id", authMiddleware, likeVideos);
 router.post("/comments/:id", authMiddleware, commentsVideos);
 router.get("/:id", authMiddleware, getVideoById);
+router.delete("/:videoId", authMiddleware, deleteVideo as any);
 
 export default router;
 
@@ -268,4 +270,41 @@ export default router;
  *                 error:
  *                   type: string
  *                   example: video failed
+ */
+
+/**
+ * @swagger
+ * /api/video/{id}:
+ *   delete:
+ *     summary: Delete a video by its ID
+ *     description: Deletes a specific video from the database. Requires Bearer Token authorization.
+ *     tags:
+ *       - Video
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the video to delete
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Video deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Video deleted successfully
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       404:
+ *         description: Video not found
+ *       500:
+ *         description: Server error
  */

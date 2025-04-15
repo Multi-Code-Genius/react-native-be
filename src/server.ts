@@ -12,6 +12,7 @@ import errorHandler from "./middlewares/errorHandler";
 import { setupSwagger } from "./utils/swagger";
 import "./types/express";
 import postRouter from "./routes/post.routes";
+import roomRouter from "./routes/room.route";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/video", videoRoutes);
 app.use("/api/post", postRouter);
+app.use("/api/room", roomRouter);
 
 app.get("/reset-redirect", (req, res) => {
   const { token } = req.query;
@@ -47,6 +49,15 @@ app.get("/", (req, res) => {
 });
 
 app.use(errorHandler);
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app
+  .listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  })
+  .on("error", (err: any) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`❌ Port ${PORT} is already in use.`);
+      process.exit(1);
+    } else {
+      throw err;
+    }
+  });

@@ -1,95 +1,118 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
 }
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model User {
-  id               String    @id @default(uuid())
-  email            String    @unique
+  id               String         @id @default(uuid())
+  email            String         @unique
   password         String?
+  createdAt        DateTime       @default(now())
   name             String?
   profile_pic      String?
   dob              DateTime?
-  mobileNumber     String?   @unique
-  location         Json?
-  status           String    @default("active")
+  mobileNumber     String?        @unique
+  status           String         @default("active")
+  updatedAt        DateTime       @default(now()) @updatedAt
   resetToken       String?
   resetTokenExpiry DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @default(now()) @updatedAt
-
-  videos   Video[]
-  posts    Post[]
-  comments Comment[]
-  likes    Like[]
+  location         Json?
+  comments         Comment[]
+  likes            Like[]
+  posts            Post[]
+  RejectedRoom     RejectedRoom[]
+  RoomUser         RoomUser[]
+  videos           Video[]
 }
 
 model Video {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String?
   description String?
   videoUrl    String
   thumbnail   String?
-  user        User     @relation(fields: [userId], references: [id])
   userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  likes    Like[]
-  comments Comment[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  comments    Comment[]
+  likes       Like[]
+  user        User      @relation(fields: [userId], references: [id])
 }
 
 model Comment {
   id        String   @id @default(uuid())
   text      String
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-
-  video     Video?   @relation(fields: [videoId], references: [id])
   videoId   String?
-
-  post      Post?    @relation(fields: [postId], references: [id])
-  postId    String?
-
   createdAt DateTime @default(now())
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video?   @relation(fields: [videoId], references: [id])
 }
-
 
 model Like {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-
-  video     Video?   @relation(fields: [videoId], references: [id])
   videoId   String?
-
-  post      Post?    @relation(fields: [postId], references: [id])
-  postId    String?
-
   createdAt DateTime @default(now())
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video?   @relation(fields: [videoId], references: [id])
 
   @@unique([userId, videoId])
   @@unique([userId, postId])
 }
 
-
-
 model Post {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String?
   description String?
-  post        String   
+  post        String
   thumbnail   String?
-  user        User     @relation(fields: [userId], references: [id])
   userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  likes       Like[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   comments    Comment[]
+  likes       Like[]
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model RejectedRoom {
+  id         String   @id
+  userId     String
+  roomId     String
+  rejectedAt DateTime @default(now())
+  Room       Room     @relation(fields: [roomId], references: [id])
+  User       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, roomId])
+}
+
+model Room {
+  id           String         @id
+  platform     String
+  location     Json
+  status       String         @default("open")
+  createdAt    DateTime       @default(now())
+  capacity     Int
+  RejectedRoom RejectedRoom[]
+  RoomUser     RoomUser[]
+}
+
+model RoomUser {
+  id       String   @id
+  userId   String
+  roomId   String
+  joinedAt DateTime @default(now())
+  Room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  User     User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, roomId])
 }
