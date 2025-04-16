@@ -13,7 +13,6 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
     const nearbyRooms = await prisma.room.findMany({
       where: {
         status: "open",
-        platform,
         location: {
           path: ["lat"],
           gte: latitude - 0.1,
@@ -106,7 +105,7 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
           lat: latitude,
           lng: longitude
         },
-        capacity: 5,
+        capacity: 3,
         status: "open",
         RoomUser: {
           create: {
@@ -123,14 +122,14 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
       }
     });
 
-    return res.status(201).json({
+    return res.status(200).json({
       room: newRoom,
       created: true,
       message: "New Room created and joined"
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error finding or creating room:", error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message || "Server error" });
   }
 };
 
