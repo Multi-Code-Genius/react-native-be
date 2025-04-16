@@ -13,10 +13,15 @@ import { setupSwagger } from "./utils/swagger";
 import "./types/express";
 import postRouter from "./routes/post.routes";
 import roomRouter from "./routes/room.route";
+import requestRouter from "./routes/request.routes";
+import http from "http";
+import { initSocket } from "./socket";
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
@@ -30,6 +35,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/video", videoRoutes);
 app.use("/api/post", postRouter);
 app.use("/api/room", roomRouter);
+app.use("/api/request", requestRouter);
 
 app.get("/reset-redirect", (req, res) => {
   const { token } = req.query;
@@ -48,8 +54,11 @@ app.get("/", (req, res) => {
   }
 });
 
+initSocket(server);
+
 app.use(errorHandler);
-app
+
+server
   .listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
   })

@@ -28,6 +28,12 @@ model User {
   RejectedRoom     RejectedRoom[]
   RoomUser         RoomUser[]
   videos           Video[]
+
+  isOnline Boolean   @default(false)
+  lastSeen DateTime?
+
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
 }
 
 model Video {
@@ -115,4 +121,17 @@ model RoomUser {
   User     User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, roomId])
+}
+
+model FriendRequest {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     String   @default("pending") // "pending" | "accepted" | "declined"
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentRequests", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
 }
