@@ -169,7 +169,20 @@ export const getAllUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profile_pic: true,
+        dob: true,
+        mobileNumber: true,
+        status: true,
+        location: true,
+        isOnline: true,
+        lastSeen: true
+      }
+    });
 
     res.status(200).json({
       message: "User data fetched successfully.",
@@ -177,7 +190,6 @@ export const getAllUser = async (
     });
   } catch (error) {
     console.error("Error fetching users:", error);
-
     const message =
       error instanceof Error ? error.message : "Internal server error";
     res.status(500).json({ message });

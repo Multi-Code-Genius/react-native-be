@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { prisma } from "./utils/prisma";
 import { SECRET_KEY } from "./config/env";
+import type { Socket } from "socket.io";
 
 export function initSocket(server: any) {
   const io = new Server(server, {
@@ -11,7 +12,7 @@ export function initSocket(server: any) {
     }
   });
 
-  io.on("connection", async (socket) => {
+  io.on("connection", async (socket: Socket) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) return socket.disconnect();
