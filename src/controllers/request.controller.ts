@@ -19,21 +19,33 @@ export const requestUser = async (req: Request, res: Response) => {
 };
 
 export const requestAccept = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const updated = await prisma.friendRequest.update({
-    where: { id },
-    data: { status: "accepted" }
-  });
-  res.json(updated);
+  try {
+    const { id } = req.params;
+    const updated = await prisma.friendRequest.update({
+      where: { id },
+      data: { status: "accepted" }
+    });
+    res.status(200).json({ message: "Request Accepted", updated });
+  } catch (err: any) {
+    res.status(400).json({
+      error: err.message || "Friend request already exists or failed."
+    });
+  }
 };
 
 export const requestDecline = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const updated = await prisma.friendRequest.update({
-    where: { id },
-    data: { status: "declined" }
-  });
-  res.json(updated);
+  try {
+    const { id } = req.params;
+    const updated = await prisma.friendRequest.update({
+      where: { id },
+      data: { status: "declined" }
+    });
+    res.status(200).json({ message: "Request declined", updated });
+  } catch (err: any) {
+    res.status(400).json({
+      error: err.message || "Friend request already exists or failed."
+    });
+  }
 };
 
 export const getFriendRequests = async (req: Request, res: Response) => {

@@ -11,9 +11,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     const id = req.user.userId;
     const user = await prisma.user.findUnique({
-      where: {
-        id
-      },
+      where: { id },
       include: {
         comments: {
           include: {
@@ -39,17 +37,72 @@ export const getProfile = async (req: Request, res: Response) => {
         },
         videos: true,
         posts: true,
-        receivedRequests: true,
-        sentRequests: true
+        sentRequests: {
+          include: {
+            receiver: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true,
+                isOnline: true,
+                lastSeen: true
+              }
+            }
+          }
+        }
       }
     });
+
+    const pendingRequests = await prisma.friendRequest.findMany({
+      where: {
+        receiverId: id,
+        status: "pending"
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+            isOnline: true,
+            lastSeen: true
+          }
+        }
+      }
+    });
+
+    const acceptedRequests = await prisma.friendRequest.findMany({
+      where: {
+        receiverId: id,
+        status: "accepted"
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+            isOnline: true,
+            lastSeen: true
+          }
+        }
+      }
+    });
+
+    const fullUserData = {
+      ...user,
+      pendingRequests,
+      acceptedRequests
+    };
 
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
 
-    res.status(200).json({ message: "User Data Fetched successfully.", user });
+    res
+      .status(200)
+      .json({ message: "User Data Fetched successfully.", user: fullUserData });
   } catch (error: unknown) {
     console.error("user error:", error);
     res.status(500).json({
