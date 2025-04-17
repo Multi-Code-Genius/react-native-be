@@ -14,6 +14,7 @@ import "./types/express";
 import postRouter from "./routes/post.routes";
 import roomRouter from "./routes/room.route";
 import requestRouter from "./routes/request.routes";
+import notificationRoutes from "./routes/notification.routes";
 import http from "http";
 import { initSocket } from "./socket";
 
@@ -36,6 +37,7 @@ app.use("/api/video", videoRoutes);
 app.use("/api/post", postRouter);
 app.use("/api/room", roomRouter);
 app.use("/api/request", requestRouter);
+app.use("/api/notification", notificationRoutes);
 
 app.get("/reset-redirect", (req, res) => {
   const { token } = req.query;

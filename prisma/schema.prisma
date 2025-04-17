@@ -29,6 +29,8 @@ model User {
   RoomUser         RoomUser[]
   videos           Video[]
 
+  fcmToken         String?
+
   isOnline Boolean   @default(false)
   lastSeen DateTime?
 
