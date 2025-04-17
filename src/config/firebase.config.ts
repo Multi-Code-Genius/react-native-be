@@ -1,7 +1,7 @@
 import admin from "firebase-admin";
 
 const serviceAccount =
-  process.env.NODE_ENV === "development"
+  process.env.NODE_ENV === "production"
     ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!)
     : require("../../firebase-service-key.json");
 
