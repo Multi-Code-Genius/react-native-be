@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
+import admin from "../config/firebase.config";
 
 export const requestUser = async (req: Request, res: Response) => {
   const { senderId, receiverId } = req.body;
+
   try {
     const request = await prisma.friendRequest.create({
       data: {
@@ -10,6 +12,24 @@ export const requestUser = async (req: Request, res: Response) => {
         receiverId
       }
     });
+
+    const receiver = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { fcmToken: true }
+    });
+
+    if (receiver?.fcmToken) {
+      const message = {
+        token: receiver.fcmToken,
+        notification: {
+          title: "New Friend Request",
+          body: "You’ve received a new friend request!"
+        }
+      };
+
+      await admin.messaging().send(message);
+    }
+
     res.json(request);
   } catch (err: any) {
     res.status(400).json({
