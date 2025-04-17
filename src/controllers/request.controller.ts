@@ -35,3 +35,41 @@ export const requestDecline = async (req: Request, res: Response) => {
   });
   res.json(updated);
 };
+
+export const getFriendRequests = async (req: Request, res: Response) => {
+  try {
+    const friendRequests = await prisma.friendRequest.findMany({
+      where: {
+        receiverId: req.user?.userId
+      }
+    });
+
+    return res.status(200).json({
+      message: " Friend requests retrieved successfully",
+      friendRequests
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      error: error.message || "Friend request already exists or failed."
+    });
+  }
+};
+
+export const getSendRequests = async (req: Request, res: Response) => {
+  try {
+    const sendRequests = await prisma.friendRequest.findMany({
+      where: {
+        senderId: req.user?.userId
+      }
+    });
+
+    return res.status(200).json({
+      message: "Send requests retrieved successfully",
+      sendRequests
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      error: error.message || "Friend request already exists or failed."
+    });
+  }
+};

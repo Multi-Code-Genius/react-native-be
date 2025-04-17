@@ -1,6 +1,7 @@
 import express, { RequestHandler } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
+  getFriendRequests,
   requestAccept,
   requestDecline,
   requestUser
@@ -18,6 +19,17 @@ router.post(
   "/friend-request/:id/decline",
   authMiddleware,
   requestDecline as RequestHandler
+);
+router.get(
+  "/friend-request/my-request",
+  authMiddleware,
+  getFriendRequests as RequestHandler
+);
+
+router.get(
+  "/friend-request/sent-request",
+  authMiddleware,
+  getFriendRequests as RequestHandler
 );
 
 export default router;

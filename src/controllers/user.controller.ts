@@ -38,7 +38,9 @@ export const getProfile = async (req: Request, res: Response) => {
           }
         },
         videos: true,
-        posts: true
+        posts: true,
+        receivedRequests: true,
+        sentRequests: true
       }
     });
 
@@ -180,7 +182,9 @@ export const getAllUser = async (
         status: true,
         location: true,
         isOnline: true,
-        lastSeen: true
+        lastSeen: true,
+        receivedRequests: true,
+        sentRequests: true
       }
     });
 
