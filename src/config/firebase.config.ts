@@ -1,8 +1,12 @@
 import admin from "firebase-admin";
-import serviceAccount from "../../firebase-service-key.json";
+
+const serviceAccount =
+  process.env.NODE_ENV === "production"
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!)
+    : require("../../firebase-service-key.json");
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount)
+  credential: admin.credential.cert(serviceAccount)
 });
 
 export default admin;
