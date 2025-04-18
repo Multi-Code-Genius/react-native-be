@@ -91,7 +91,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     const sentAcceptedRequest = await prisma.friendRequest.findMany({
       where: {
-        receiverId: id,
+        senderId: id,
         status: "accepted"
       },
       include: {
@@ -243,7 +243,14 @@ export const getAllUser = async (
   res: Response
 ): Promise<void> => {
   try {
+    const userId = req.user?.userId;
+
     const users = await prisma.user.findMany({
+      where: {
+        id: {
+          not: userId
+        }
+      },
       select: {
         id: true,
         email: true,
