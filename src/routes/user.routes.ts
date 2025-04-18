@@ -5,6 +5,7 @@ import {
   getAllUser,
   getProfile,
   getUserByid,
+  pingOnline,
   searchUser,
   uploadProfilePicture
 } from "../controllers/user.controller";
@@ -24,6 +25,7 @@ router.post(
 router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
 router.get("/search", authMiddleware, searchUser as RequestHandler);
 router.get("/user-data/:id", authMiddleware, getUserByid as RequestHandler);
+router.get("/ping", authMiddleware, pingOnline as RequestHandler);
 
 // GET PROFILE /Get User route
 /**
