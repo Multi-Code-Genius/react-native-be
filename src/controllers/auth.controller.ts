@@ -102,8 +102,11 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) return res.status(400).json({ message: "User not found" });
 
     const token = crypto.randomBytes(32).toString("hex");
     const expiry = new Date(Date.now() + 1000 * 60 * 15);
@@ -133,7 +136,9 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Reset link sent to your email" });
   } catch (error: any) {
     console.error("Reset Error:", error.message);
-    return res.status(500).json({ message: "Something went wrong" });
+    return res
+      .status(500)
+      .json({ message: error.message || "Something went wrong" });
   }
 };
 export const resetPassword = async (req: Request, res: Response) => {
