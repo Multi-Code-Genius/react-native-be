@@ -15,7 +15,7 @@ export const requestUser = async (req: Request, res: Response) => {
 
     const receiver = await prisma.user.findUnique({
       where: { id: receiverId },
-      select: { fcmToken: true }
+      select: { fcmToken: true, name: true }
     });
 
     if (receiver?.fcmToken) {
@@ -23,7 +23,22 @@ export const requestUser = async (req: Request, res: Response) => {
         token: receiver.fcmToken,
         notification: {
           title: "New Friend Request",
-          body: "You’ve received a new friend request!"
+          body: `You’ve received a ${receiver.name} new friend request!`
+        },
+        android: {
+          priority: "high" as const,
+          notification: {
+            channelId: "default",
+            sound: "default",
+            defaultSound: true
+          }
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default"
+            }
+          }
         }
       };
 
