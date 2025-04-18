@@ -108,9 +108,8 @@ export const requestAccept = async (req: Request, res: Response) => {
 export const requestDecline = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updated = await prisma.friendRequest.update({
-      where: { id },
-      data: { status: "declined" }
+    const updated = await prisma.friendRequest.delete({
+      where: { id }
     });
     res.status(200).json({ message: "Request declined", updated });
   } catch (err: any) {
