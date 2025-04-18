@@ -344,4 +344,38 @@ router.get("/ping", authMiddleware, pingOnline as RequestHandler);
  *         description: Internal Server Error
  */
 
+/**
+ * @swagger
+ * /api/user/ping:
+ *   get:
+ *     summary: Ping user session
+ *     description: Used to check if the user token is valid and the user is authenticated.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: _
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Optional timestamp to prevent request caching.
+ *         example: 1744972129990
+ *     responses:
+ *       200:
+ *         description: Successfully authenticated and user is active.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               example:
+ *                 message: User is active
+ *                 userId: 3cf5033f-b1bb-4816-aca0-fe4a59a4d445
+ *       401:
+ *         description: Unauthorized - Invalid or missing token.
+ *       500:
+ *         description: Internal server error.
+ */
+
 export default router;
