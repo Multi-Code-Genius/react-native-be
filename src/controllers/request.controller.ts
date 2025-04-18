@@ -65,38 +65,6 @@ export const requestAccept = async (req: Request, res: Response) => {
       data: { status: "accepted" }
     });
 
-    // const receiver = await prisma.user.findUnique({
-    //   where: { id: id },
-    //   select: { fcmToken: true, name: true }
-    // });
-
-    // if (receiver?.fcmToken) {
-    //   const message = {
-    //     token: receiver.fcmToken,
-    //     notification: {
-    //       title: "New Friend Request",
-    //       body: `You’ve received a ${receiver.name} new friend request!`
-    //     },
-    //     android: {
-    //       priority: "high" as const,
-    //       notification: {
-    //         channelId: "default",
-    //         sound: "default",
-    //         defaultSound: true
-    //       }
-    //     },
-    //     apns: {
-    //       payload: {
-    //         aps: {
-    //           sound: "default"
-    //         }
-    //       }
-    //     }
-    //   };
-
-    //   await admin.messaging().send(message);
-    // }
-
     res.status(200).json({ message: "Request Accepted", updated });
   } catch (err: any) {
     res.status(400).json({

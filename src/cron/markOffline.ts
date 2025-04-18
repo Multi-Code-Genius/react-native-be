@@ -13,6 +13,4 @@ export const markInactiveUsersOffline = async () => {
       isOnline: false
     }
   });
-
-  console.log("Inactive users marked offline");
 };
