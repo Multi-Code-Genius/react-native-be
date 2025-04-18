@@ -12,7 +12,7 @@ export const sendPushNotification = async (req: Request, res: Response) => {
       body
     },
     android: {
-      priority: "high",
+      priority: "high" as const,
       notification: {
         channelId: "default",
         sound: "default",
