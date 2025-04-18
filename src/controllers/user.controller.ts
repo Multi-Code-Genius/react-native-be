@@ -89,10 +89,29 @@ export const getProfile = async (req: Request, res: Response) => {
       }
     });
 
+    const sentAcceptedRequest = await prisma.friendRequest.findMany({
+      where: {
+        receiverId: id,
+        status: "accepted"
+      },
+      include: {
+        receiver: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+            isOnline: true,
+            lastSeen: true
+          }
+        }
+      }
+    });
+
     const fullUserData = {
       ...user,
       pendingRequests,
-      acceptedRequests
+      followers: acceptedRequests,
+      following: sentAcceptedRequest
     };
 
     if (!user) {
