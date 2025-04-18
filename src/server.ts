@@ -17,6 +17,8 @@ import requestRouter from "./routes/request.routes";
 import notificationRoutes from "./routes/notification.routes";
 import http from "http";
 import { initSocket } from "./socket";
+import cron from "node-cron";
+import { markInactiveUsersOffline } from "./cron/markOffline";
 
 dotenv.config();
 
@@ -38,6 +40,10 @@ app.use("/api/post", postRouter);
 app.use("/api/room", roomRouter);
 app.use("/api/request", requestRouter);
 app.use("/api/notification", notificationRoutes);
+
+cron.schedule("* * * * *", () => {
+  markInactiveUsersOffline();
+});
 
 app.get("/reset-redirect", (req, res) => {
   const { token } = req.query;

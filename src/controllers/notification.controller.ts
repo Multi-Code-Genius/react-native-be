@@ -10,6 +10,21 @@ export const sendPushNotification = async (req: Request, res: Response) => {
     notification: {
       title,
       body
+    },
+    android: {
+      priority: "high",
+      notification: {
+        channelId: "default",
+        sound: "default",
+        defaultSound: true
+      }
+    },
+    apns: {
+      payload: {
+        aps: {
+          sound: "default"
+        }
+      }
     }
   };
 
@@ -26,11 +41,8 @@ export const saveFCMToken = async (req: Request, res: Response) => {
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
-
   const id = req.user.userId;
   const { token } = req.body;
-
-  console.log("token", token);
 
   try {
     await prisma.user.update({

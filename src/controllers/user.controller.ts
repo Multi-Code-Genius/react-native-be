@@ -330,3 +330,23 @@ export const searchUser = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
+export const pingOnline = async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+
+  if (!userId) return res.status(400).json({ error: "User ID required" });
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isOnline: true,
+        lastSeen: new Date()
+      }
+    });
+
+    res.json({ status: "active" });
+  } catch (err) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
