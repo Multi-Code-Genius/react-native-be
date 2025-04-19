@@ -38,6 +38,9 @@ export const getProfile = async (req: Request, res: Response) => {
         videos: true,
         posts: true,
         sentRequests: {
+          where: {
+            status: "pending"
+          },
           include: {
             receiver: {
               select: {
