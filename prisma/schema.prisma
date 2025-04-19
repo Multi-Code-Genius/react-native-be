@@ -30,13 +30,16 @@ model User {
   videos           Video[]
 
   fcmToken         String?
-
-  isOnline Boolean   @default(false)
-  lastSeen DateTime?
+  isOnline         Boolean        @default(false)
+  lastSeen         DateTime?
 
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
+
+  friends          Friend[]       @relation("UserFriend")
+  friendOf         Friend[]       @relation("FriendUser")
 }
+
 
 model Video {
   id          String    @id @default(uuid())
@@ -136,4 +139,17 @@ model FriendRequest {
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id])
 
   @@unique([senderId, receiverId])
+}
+
+
+model Friend {
+  id         String   @id @default(uuid())
+  userId     String
+  friendId   String
+  createdAt  DateTime @default(now())
+
+  user     User @relation("UserFriend", fields: [userId], references: [id])
+  friend   User @relation("FriendUser", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
 }

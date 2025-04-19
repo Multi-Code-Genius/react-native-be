@@ -9,11 +9,15 @@ import {
 
 const router = express.Router();
 
-router.post("/friend-request", authMiddleware, requestUser as RequestHandler);
+router.post(
+  "/friend-request",
+  authMiddleware,
+  requestUser as unknown as RequestHandler
+);
 router.post(
   "/friend-request/:id/accept",
   authMiddleware,
-  requestAccept as RequestHandler
+  requestAccept as unknown as RequestHandler
 );
 router.post(
   "/friend-request/:id/decline",

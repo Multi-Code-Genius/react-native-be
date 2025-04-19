@@ -5,11 +5,11 @@ import { UserData } from "../types/user";
 export const getProfile = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const id = req.user.userId;
+
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
@@ -53,13 +53,25 @@ export const getProfile = async (req: Request, res: Response) => {
       }
     });
 
-    const pendingRequests = await prisma.friendRequest.findMany({
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const mutualFriends = await prisma.friend.findMany({
       where: {
-        receiverId: id,
-        status: "pending"
+        OR: [{ userId: id }, { friendId: id }]
       },
       include: {
-        sender: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+            isOnline: true,
+            lastSeen: true
+          }
+        },
+        friend: {
           select: {
             id: true,
             name: true,
@@ -71,57 +83,19 @@ export const getProfile = async (req: Request, res: Response) => {
       }
     });
 
-    const acceptedRequests = await prisma.friendRequest.findMany({
-      where: {
-        receiverId: id,
-        status: "accepted"
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            profile_pic: true,
-            isOnline: true,
-            lastSeen: true
-          }
-        }
-      }
-    });
-
-    const sentAcceptedRequest = await prisma.friendRequest.findMany({
-      where: {
-        senderId: id,
-        status: "accepted"
-      },
-      include: {
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            profile_pic: true,
-            isOnline: true,
-            lastSeen: true
-          }
-        }
-      }
+    const friends = mutualFriends.map((fr) => {
+      return fr.user.id === id ? fr.friend : fr.user;
     });
 
     const fullUserData = {
       ...user,
-      pendingRequests,
-      followers: acceptedRequests,
-      following: sentAcceptedRequest
+      friends
     };
 
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    res
-      .status(200)
-      .json({ message: "User Data Fetched successfully.", user: fullUserData });
+    res.status(200).json({
+      message: "User Data Fetched successfully.",
+      user: fullUserData
+    });
   } catch (error: unknown) {
     console.error("user error:", error);
     res.status(500).json({
@@ -245,30 +219,52 @@ export const getAllUser = async (
   try {
     const userId = req.user?.userId;
 
+    const sent = await prisma.friendRequest.findMany({
+      where: {
+        senderId: userId
+      },
+      select: { receiverId: true }
+    });
+
+    const received = await prisma.friendRequest.findMany({
+      where: {
+        receiverId: userId
+      },
+      select: { senderId: true }
+    });
+
+    const sentIds = sent.map((req) => req.receiverId);
+    const receivedIds = received.map((req) => req.senderId);
+    const excludeIds = [
+      ...new Set(
+        [...sentIds, ...receivedIds, userId].filter(
+          (id): id is string => typeof id === "string"
+        )
+      )
+    ];
+
     const users = await prisma.user.findMany({
       where: {
         id: {
-          not: userId
+          notIn: excludeIds
         }
       },
       select: {
         id: true,
-        email: true,
         name: true,
         profile_pic: true,
+        email: true,
         dob: true,
         mobileNumber: true,
         status: true,
         location: true,
         isOnline: true,
-        lastSeen: true,
-        receivedRequests: true,
-        sentRequests: true
+        lastSeen: true
       }
     });
 
     res.status(200).json({
-      message: "User data fetched successfully.",
+      message: "Suggested users fetched successfully.",
       users
     });
   } catch (error) {
