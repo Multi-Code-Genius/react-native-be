@@ -68,6 +68,8 @@ export const getProfile = async (req: Request, res: Response) => {
             name: true,
             profile_pic: true,
             isOnline: true,
+            email: true,
+            location: true,
             lastSeen: true
           }
         },
@@ -75,6 +77,8 @@ export const getProfile = async (req: Request, res: Response) => {
           select: {
             id: true,
             name: true,
+            email: true,
+            location: true,
             profile_pic: true,
             isOnline: true,
             lastSeen: true
@@ -83,9 +87,14 @@ export const getProfile = async (req: Request, res: Response) => {
       }
     });
 
-    const friends = mutualFriends.map((fr) => {
-      return fr.user.id === id ? fr.friend : fr.user;
-    });
+    const friends = Array.from(
+      new Map(
+        mutualFriends.map((fr) => {
+          const friendUser = fr.user.id === id ? fr.friend : fr.user;
+          return [friendUser.id, friendUser];
+        })
+      ).values()
+    );
 
     const fullUserData = {
       ...user,
