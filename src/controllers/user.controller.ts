@@ -87,13 +87,29 @@ export const getProfile = async (req: Request, res: Response) => {
       }
     });
 
+    const friendsWithRequestId = await Promise.all(
+      mutualFriends.map(async (fr) => {
+        const friendUser = fr.user.id === id ? fr.friend : fr.user;
+
+        const friendRequest = await prisma.friendRequest.findFirst({
+          where: {
+            OR: [
+              { senderId: id, receiverId: friendUser.id },
+              { senderId: friendUser.id, receiverId: id }
+            ]
+          },
+          select: { id: true }
+        });
+
+        return {
+          ...friendUser,
+          friendRequestId: friendRequest?.id ?? null
+        };
+      })
+    );
+
     const friends = Array.from(
-      new Map(
-        mutualFriends.map((fr) => {
-          const friendUser = fr.user.id === id ? fr.friend : fr.user;
-          return [friendUser.id, friendUser];
-        })
-      ).values()
+      new Map(friendsWithRequestId.map((f) => [f.id, f])).values()
     );
 
     const fullUserData = {
