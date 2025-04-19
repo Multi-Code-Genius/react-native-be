@@ -235,37 +235,37 @@ export const getAllUser = async (
 
     const sentIds = sent.map((req) => req.receiverId);
     const receivedIds = received.map((req) => req.senderId);
-    const excludeIds = [
-      ...new Set(
-        [...sentIds, ...receivedIds, userId].filter(
-          (id): id is string => typeof id === "string"
-        )
-      )
-    ];
+    // const excludeIds = [
+    //   ...new Set(
+    //     [...sentIds, ...receivedIds, userId].filter(
+    //       (id): id is string => typeof id === "string"
+    //     )
+    //   )
+    // ];
 
-    const users = await prisma.user.findMany({
-      where: {
-        id: {
-          notIn: excludeIds
-        }
-      },
-      select: {
-        id: true,
-        name: true,
-        profile_pic: true,
-        email: true,
-        dob: true,
-        mobileNumber: true,
-        status: true,
-        location: true,
-        isOnline: true,
-        lastSeen: true
-      }
-    });
+    // const users = await prisma.user.findMany({
+    //   where: {
+    //     id: {
+    //       notIn: excludeIds
+    //     }
+    //   },
+    //   select: {
+    //     id: true,
+    //     name: true,
+    //     profile_pic: true,
+    //     email: true,
+    //     dob: true,
+    //     mobileNumber: true,
+    //     status: true,
+    //     location: true,
+    //     isOnline: true,
+    //     lastSeen: true
+    //   }
+    // });
 
     res.status(200).json({
-      message: "Suggested users fetched successfully.",
-      users
+      message: "Suggested users fetched successfully."
+      // users
     });
   } catch (error) {
     console.error("Error fetching users:", error);
