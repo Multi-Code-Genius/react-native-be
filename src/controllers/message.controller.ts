@@ -49,3 +49,25 @@ export const missedMessage = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const markMessagesAsRead = async (req: Request, res: Response) => {
+  try {
+    const { userId, withUserId } = req.params;
+
+    await prisma.message.updateMany({
+      where: {
+        senderId: withUserId,
+        receiverId: userId,
+        read: false
+      },
+      data: {
+        read: true
+      }
+    });
+
+    res.status(200).json({ message: "Messages marked as read" });
+  } catch (error) {
+    console.error("markMessagesAsRead error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

@@ -1,6 +1,7 @@
 import { RequestHandler, Router } from "express";
 import {
   createMessage,
+  markMessagesAsRead,
   missedMessage
 } from "../controllers/message.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -12,6 +13,12 @@ router.get(
   "/messages/:userId/:withUserId",
   authMiddleware,
   missedMessage as unknown as RequestHandler
+);
+
+router.put(
+  "/mark-as-read/:userId/:withUserId",
+  authMiddleware,
+  markMessagesAsRead as unknown as RequestHandler
 );
 
 export default router;
