@@ -52,6 +52,22 @@ export const getProfile = async (req: Request, res: Response) => {
               }
             }
           }
+        },
+        receivedRequests: {
+          where: {
+            status: "pending"
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true,
+                isOnline: true,
+                lastSeen: true
+              }
+            }
+          }
         }
       }
     });
