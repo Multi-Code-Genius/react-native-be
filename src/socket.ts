@@ -39,11 +39,32 @@ export const initSocket = (server: any): void => {
         });
         if (receiver?.fcmToken) {
           await sendMessageNotification(receiver.fcmToken, {
-            title: "New Message",
-            body: content,
+            notification: {
+              title: "New Message",
+              body: content
+            },
             data: {
               senderId,
               type: "message"
+            },
+            android: {
+              priority: "high",
+              notification: {
+                channelId: "default",
+                sound: "default",
+                defaultSound: true
+              }
+            },
+            apns: {
+              payload: {
+                aps: {
+                  alert: {
+                    title: "New Message",
+                    body: content
+                  },
+                  sound: "default"
+                }
+              }
             }
           });
         }

@@ -22,7 +22,7 @@ export const createMessage = async (req: Request, res: Response) => {
 export const missedMessage = async (req: Request, res: Response) => {
   try {
     const { userId, withUserId } = req.params;
-    const { cursor, limit = 10 } = req.query;
+    const { cursor, limit = 20 } = req.query;
 
     const messages = await prisma.message.findMany({
       where: {
@@ -32,20 +32,8 @@ export const missedMessage = async (req: Request, res: Response) => {
         ]
       },
       include: {
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            profile_pic: true
-          }
-        },
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            profile_pic: true
-          }
-        }
+        receiver: { select: { id: true, name: true, profile_pic: true } },
+        sender: { select: { id: true, name: true, profile_pic: true } }
       },
       orderBy: { createdAt: "desc" },
       take: Number(limit),
@@ -56,8 +44,8 @@ export const missedMessage = async (req: Request, res: Response) => {
     });
 
     res.status(200).json(messages.reverse());
-  } catch (error: any) {
-    console.error("Message error:", error);
-    res.status(500).json({ error: error.message || "Message failed" });
+  } catch (error) {
+    console.error("missedMessage error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
