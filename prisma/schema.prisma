@@ -29,17 +29,19 @@ model User {
   RoomUser         RoomUser[]
   videos           Video[]
 
-  fcmToken         String?
-  isOnline         Boolean        @default(false)
-  lastSeen         DateTime?
+  fcmToken String?
+  isOnline Boolean   @default(false)
+  lastSeen DateTime?
 
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
 
-  friends          Friend[]       @relation("UserFriend")
-  friendOf         Friend[]       @relation("FriendUser")
-}
+  friends  Friend[] @relation("UserFriend")
+  friendOf Friend[] @relation("FriendUser")
 
+  messagesSent     Message[] @relation("SenderMessages")
+  messagesReceived Message[] @relation("ReceiverMessages")
+}
 
 model Video {
   id          String    @id @default(uuid())
@@ -141,15 +143,29 @@ model FriendRequest {
   @@unique([senderId, receiverId])
 }
 
-
 model Friend {
-  id         String   @id @default(uuid())
-  userId     String
-  friendId   String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  friendId  String
+  createdAt DateTime @default(now())
 
-  user     User @relation("UserFriend", fields: [userId], references: [id])
-  friend   User @relation("FriendUser", fields: [friendId], references: [id])
+  user   User @relation("UserFriend", fields: [userId], references: [id])
+  friend User @relation("FriendUser", fields: [friendId], references: [id])
 
   @@unique([userId, friendId])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  createdAt  DateTime @default(now())
+  read       Boolean  @default(false)
+
+  sender   User @relation("SenderMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceiverMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, senderId])
 }

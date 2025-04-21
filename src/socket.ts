@@ -1,42 +1,58 @@
-import { Server } from "socket.io";
-import jwt from "jsonwebtoken";
+import { Server, Socket } from "socket.io";
 import { prisma } from "./utils/prisma";
-import { SECRET_KEY } from "./config/env";
-import type { Socket } from "socket.io";
+import { sendMessageNotification } from "./helper/sendMessageNotification";
 
-export function initSocket(server: any) {
-  const io = new Server(server, {
+let io: Server;
+
+const userSocketMap = new Map<string, string>();
+
+export const initSocket = (server: any): void => {
+  io = new Server(server, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
+      origin: "*"
     }
   });
 
-  io.on("connection", async (socket: Socket) => {
-    const token = socket.handshake.auth?.token;
+  io.on("connection", (socket: Socket) => {
+    const userId = socket.handshake.query.userId as string;
+    if (!userId) {
+      console.log("Connection rejected: No userId");
+      return socket.disconnect();
+    }
 
-    if (!token) return socket.disconnect();
+    userSocketMap.set(userId, socket.id);
+    console.log(`User ${userId} connected via socket ${socket.id}`);
 
-    try {
-      const decoded: any = jwt.verify(token, SECRET_KEY!);
-      const user = decoded;
+    socket.on("sendMessage", async (messageData) => {
+      const { senderId, receiverId, content } = messageData;
 
-      const id = user.userId;
-
-      await prisma.user.update({
-        where: { id: id },
-        data: { isOnline: true, lastSeen: null }
+      const newMessage = await prisma.message.create({
+        data: { senderId, receiverId, content }
       });
 
-      socket.on("disconnect", async () => {
-        await prisma.user.update({
-          where: { id: id },
-          data: { isOnline: false, lastSeen: new Date() }
+      const receiverSocketId = userSocketMap.get(receiverId);
+      if (receiverSocketId && io.sockets.sockets.get(receiverSocketId)) {
+        io.to(receiverSocketId).emit("newMessage", newMessage);
+      } else {
+        const receiver = await prisma.user.findUnique({
+          where: { id: receiverId }
         });
-      });
-    } catch (err) {
-      console.error("Invalid token", err);
-      socket.disconnect();
-    }
+        if (receiver?.fcmToken) {
+          await sendMessageNotification(receiver.fcmToken, {
+            title: "New Message",
+            body: content,
+            data: {
+              senderId,
+              type: "message"
+            }
+          });
+        }
+      }
+    });
+
+    socket.on("disconnect", async () => {
+      console.log(`User ${userId} disconnected`);
+      userSocketMap.delete(userId);
+    });
   });
-}
+};
