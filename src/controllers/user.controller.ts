@@ -111,26 +111,42 @@ export const getProfile = async (req: Request, res: Response) => {
       }
     });
 
-    const friendsWithRequestId = await Promise.all(
-      mutualFriends.map(async (fr) => {
-        const friendUser = fr.user.id === id ? fr.friend : fr.user;
+    const friendsData = mutualFriends.map((fr) => {
+      const friendUser = fr.user.id === id ? fr.friend : fr.user;
+      return {
+        id: friendUser.id,
+        data: friendUser
+      };
+    });
 
-        const friendRequest = await prisma.friendRequest.findFirst({
-          where: {
-            OR: [
-              { senderId: id, receiverId: friendUser.id },
-              { senderId: friendUser.id, receiverId: id }
-            ]
-          },
-          select: { id: true }
-        });
+    const friendIds = friendsData.map((f) => f.id);
 
-        return {
-          ...friendUser,
-          friendRequestId: friendRequest?.id ?? null
-        };
-      })
-    );
+    const allFriendRequests = await prisma.friendRequest.findMany({
+      where: {
+        OR: friendIds.flatMap((friendId) => [
+          { senderId: id, receiverId: friendId },
+          { senderId: friendId, receiverId: id }
+        ])
+      },
+      select: {
+        id: true,
+        senderId: true,
+        receiverId: true
+      }
+    });
+
+    const friendsWithRequestId = friendsData.map((friend) => {
+      const request = allFriendRequests.find(
+        (fr) =>
+          (fr.senderId === id && fr.receiverId === friend.id) ||
+          (fr.senderId === friend.id && fr.receiverId === id)
+      );
+
+      return {
+        ...friend.data,
+        friendRequestId: request?.id ?? null
+      };
+    });
 
     const friends = Array.from(
       new Map(friendsWithRequestId.map((f) => [f.id, f])).values()
@@ -146,7 +162,7 @@ export const getProfile = async (req: Request, res: Response) => {
       user: fullUserData
     });
   } catch (error: unknown) {
-    console.error("user error:", error);
+    console.error("User profile error:", error);
     res.status(500).json({
       message: error instanceof Error ? error.message : "Internal server error"
     });
