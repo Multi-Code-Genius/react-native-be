@@ -159,7 +159,8 @@ model Message {
   id         String   @id @default(uuid())
   senderId   String
   receiverId String
-  content    String
+  content    String?
+  imageUrl   String?
   createdAt  DateTime @default(now())
   read       Boolean  @default(false)
 

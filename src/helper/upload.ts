@@ -23,6 +23,16 @@ const postStorage = new CloudinaryStorage({
   } as any
 });
 
+const messageImageStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    resource_type: "auto",
+    folder: "message-images",
+    allowed_formats: ["jpg", "png", "gif", "jpeg", "webp"],
+    transformation: [{ width: 1080, height: 1080, crop: "limit" }]
+  } as any
+});
+
 const videoStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -39,3 +49,4 @@ const videoStorage = new CloudinaryStorage({
 export const uploadVideo = multer({ storage: videoStorage });
 export const uploadProfile = multer({ storage: profileStorage });
 export const uploadPost = multer({ storage: postStorage });
+export const uploadMessageImage = multer({ storage: messageImageStorage });

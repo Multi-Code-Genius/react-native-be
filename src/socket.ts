@@ -2,9 +2,9 @@ import { Server, Socket } from "socket.io";
 import { prisma } from "./utils/prisma";
 import { sendMessageNotification } from "./helper/sendMessageNotification";
 
-let io: Server;
+export let io: Server;
 
-const userSocketMap = new Map<string, string>();
+export const userSocketMap = new Map<string, string>();
 
 export const initSocket = (server: any): void => {
   io = new Server(server, {
@@ -61,6 +61,58 @@ export const initSocket = (server: any): void => {
                   alert: {
                     title: "New Message",
                     body: content
+                  },
+                  sound: "default"
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+
+    socket.on("sendImage", async (imageData) => {
+      const { senderId, receiverId, imageUrl, metadata } = imageData;
+
+      const newMessage = await prisma.message.create({
+        data: {
+          senderId,
+          receiverId,
+          imageUrl
+        }
+      });
+
+      const receiverSocketId = userSocketMap.get(receiverId);
+      if (receiverSocketId && io.sockets.sockets.get(receiverSocketId)) {
+        io.to(receiverSocketId).emit("newMessage", newMessage);
+      } else {
+        const receiver = await prisma.user.findUnique({
+          where: { id: receiverId }
+        });
+        if (receiver?.fcmToken) {
+          await sendMessageNotification(receiver.fcmToken, {
+            notification: {
+              title: "New Image",
+              body: "You received a new image."
+            },
+            data: {
+              senderId,
+              type: "message"
+            },
+            android: {
+              priority: "high",
+              notification: {
+                channelId: "default",
+                sound: "default",
+                defaultSound: true
+              }
+            },
+            apns: {
+              payload: {
+                aps: {
+                  alert: {
+                    title: "New Image",
+                    body: "You received a new image."
                   },
                   sound: "default"
                 }
