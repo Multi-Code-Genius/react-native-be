@@ -25,11 +25,11 @@ router.put(
 );
 
 router.post(
-  "/upload-message-image/:senderId/:receiverId",
+  "/upload-message-image",
   uploadMessageImage.single("image"),
   (async (req: Request, res: Response) => {
     try {
-      const { senderId, receiverId } = req.params;
+      const { senderId, receiverId } = req.body;
       const file = req.file;
 
       if (!file || !file.path) {
