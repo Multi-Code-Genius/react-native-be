@@ -15,25 +15,40 @@ export const initSocket = (server: any): void => {
 
   io.on("connection", (socket: Socket) => {
     const userId = socket.handshake.query.userId as string;
+
     if (!userId) {
-      console.log("Connection rejected: No userId");
       return socket.disconnect();
     }
 
     userSocketMap.set(userId, socket.id);
-    console.log(`User ${userId} connected via socket ${socket.id}`);
-
     socket.on("sendMessage", async (messageData) => {
-      const { senderId, receiverId, content } = messageData;
-
-      const newMessage = await prisma.message.create({
-        data: { senderId, receiverId, content }
-      });
+      const { senderId, receiverId, content, messageId } = messageData;
 
       const receiverSocketId = userSocketMap.get(receiverId);
-      if (receiverSocketId && io.sockets.sockets.get(receiverSocketId)) {
-        io.to(receiverSocketId).emit("newMessage", newMessage);
+      const senderSocketId = userSocketMap.get(senderId);
+
+      const newMessage = await prisma.message.create({
+        data: {
+          senderId,
+          receiverId,
+          content,
+          id: messageId,
+          read: receiverSocketId ? true : false
+        }
+      });
+
+      if (
+        (receiverSocketId && io.sockets.sockets.get(receiverSocketId)) ||
+        (senderSocketId && io.sockets.sockets.get(senderSocketId))
+      ) {
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("newMessage", newMessage);
+        }
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("newMessage", newMessage);
+        }
       } else {
+        console.log("🔴 Receiver not connected, sending push notification...");
         const receiver = await prisma.user.findUnique({
           where: { id: receiverId }
         });
@@ -71,55 +86,14 @@ export const initSocket = (server: any): void => {
       }
     });
 
-    socket.on("sendImage", async (imageData) => {
-      const { senderId, receiverId, imageUrl, metadata } = imageData;
-
-      const newMessage = await prisma.message.create({
-        data: {
-          senderId,
-          receiverId,
-          imageUrl
-        }
-      });
-
-      const receiverSocketId = userSocketMap.get(receiverId);
-      if (receiverSocketId && io.sockets.sockets.get(receiverSocketId)) {
-        io.to(receiverSocketId).emit("newMessage", newMessage);
-      } else {
-        const receiver = await prisma.user.findUnique({
-          where: { id: receiverId }
-        });
-        if (receiver?.fcmToken) {
-          await sendMessageNotification(receiver.fcmToken, {
-            notification: {
-              title: "New Image",
-              body: "You received a new image."
-            },
-            data: {
-              senderId,
-              type: "message"
-            },
-            android: {
-              priority: "high",
-              notification: {
-                channelId: "default",
-                sound: "default",
-                defaultSound: true
-              }
-            },
-            apns: {
-              payload: {
-                aps: {
-                  alert: {
-                    title: "New Image",
-                    body: "You received a new image."
-                  },
-                  sound: "default"
-                }
-              }
-            }
-          });
-        }
+    socket.on("markMessageAsRead", async ({ userId, senderId }) => {
+      const senderSocketId = userSocketMap.get(senderId);
+      const receverId = userSocketMap.get(userId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messagesRead", { by: userId });
+      }
+      if (receverId) {
+        io.to(receverId).emit("messagesRead", { by: userId });
       }
     });
 
