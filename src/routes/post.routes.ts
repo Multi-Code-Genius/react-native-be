@@ -1,6 +1,9 @@
 import express, { RequestHandler } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { uploadPost as useUploadPost } from "../helper/upload";
+import {
+  uploadPost as useUploadPost,
+  handleUploadPost
+} from "../helper/upload";
 import {
   commentsPost,
   getPost,
@@ -14,6 +17,7 @@ const postRouter = express.Router();
 postRouter.post(
   "/upload-post",
   useUploadPost.single("post"),
+  handleUploadPost,
   authMiddleware,
   uploadPost as RequestHandler
 );

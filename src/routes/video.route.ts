@@ -1,5 +1,5 @@
 import express, { RequestHandler } from "express";
-import { uploadVideo } from "../helper/upload";
+import { uploadVideo, handleUploadVideo } from "../helper/upload";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   commentsVideos,
@@ -18,11 +18,15 @@ router.post(
   uploadVideo.single("video"),
   uploadVideos
 );
-router.get("/", authMiddleware, getVideos);
-router.get("/like/:id", authMiddleware, likeVideos);
-router.post("/comments/:id", authMiddleware, commentsVideos);
-router.get("/:id", authMiddleware, getVideoById);
-router.delete("/:videoId", authMiddleware, deleteVideo as any);
+router.get("/", authMiddleware, getVideos as RequestHandler);
+router.get("/like/:id", authMiddleware, likeVideos as RequestHandler);
+router.post("/comments/:id", authMiddleware, commentsVideos as RequestHandler);
+router.get("/:id", authMiddleware, getVideoById as RequestHandler);
+router.delete(
+  "/:videoId",
+  authMiddleware,
+  deleteVideo as any as RequestHandler
+);
 
 export default router;
 

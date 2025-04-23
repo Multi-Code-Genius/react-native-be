@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
+import { CustomRequest } from "../types/user";
 
-export const uploadPost = async (req: Request, res: Response) => {
+export const uploadPost = async (req: CustomRequest, res: Response) => {
   try {
     const { title, description } = req.body;
-    const post = req.file?.path ?? "";
+
+    const post = req.uploadedFile?.url || req.file?.path || "";
 
     const newPost = await prisma.post.create({
       data: {

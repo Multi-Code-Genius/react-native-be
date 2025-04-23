@@ -1,3 +1,5 @@
+import { Request } from "express";
+
 export type UserData = {
   id: string;
   email: string;
@@ -9,3 +11,10 @@ export type UserData = {
   status?: string;
   dob: Date;
 };
+
+export interface CustomRequest extends Request {
+  file?: Express.Multer.File;
+  uploadedFile?: {
+    url: string;
+  };
+}

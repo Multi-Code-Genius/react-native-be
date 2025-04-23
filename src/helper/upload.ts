@@ -1,52 +1,89 @@
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
-import cloudinary from "./cloudinary";
 import path from "path";
+import { imagekit } from "../utils/imageKit";
 
-const profileStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    resource_type: "auto",
-    folder: "profile-pics",
-    allowed_formats: ["jpg", "png"],
-    transformation: [{ width: 300, height: 300, crop: "limit" }]
-  } as any
-});
+const memoryStorage = multer.memoryStorage();
 
-const postStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    resource_type: "auto",
-    folder: "post",
-    allowed_formats: ["jpg", "png"],
-    transformation: [{ width: 1080, height: 1080, crop: "limit" }]
-  } as any
-});
-
-const messageImageStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    resource_type: "auto",
-    folder: "message-images",
-    allowed_formats: ["jpg", "png", "gif", "jpeg", "webp"],
-    transformation: [{ width: 1080, height: 1080, crop: "limit" }]
-  } as any
-});
-
-const videoStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    resource_type: "video",
-    folder: "reels-videos",
-    allowed_formats: ["mp4", "mov", "webm"],
-    public_id: (req: unknown, file: { originalname: string }) => {
-      const nameWithoutExt = path.parse(file.originalname).name;
-      return `video-${Date.now()}-${nameWithoutExt}`;
+const fileFilterFactory =
+  (allowedMimes: string[]) =>
+  (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported file type"));
     }
-  } as any
+  };
+
+const imageKitUploader = (folder: string, transform?: string) => {
+  return async (req: any, res: any, next: any) => {
+    if (!req.file) return next();
+
+    const file = req.file;
+    const buffer = file.buffer;
+    const base64File = `data:${file.mimetype};base64,${buffer.toString(
+      "base64"
+    )}`;
+    const nameWithoutExt = path.parse(file.originalname).name;
+    const customName = `${folder}-${Date.now()}-${nameWithoutExt}`;
+
+    try {
+      const uploadResult = await imagekit.upload({
+        file: base64File,
+        fileName: customName,
+        folder,
+        useUniqueFileName: false
+      });
+
+      req.uploadedFile = {
+        url: transform
+          ? `${uploadResult.url}?tr=${transform}`
+          : uploadResult.url,
+        fileId: uploadResult.fileId,
+        original: uploadResult
+      };
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
+export const uploadVideo = multer({
+  storage: memoryStorage,
+  fileFilter: fileFilterFactory(["video/mp4", "video/webm", "video/quicktime"])
 });
 
-export const uploadVideo = multer({ storage: videoStorage });
-export const uploadProfile = multer({ storage: profileStorage });
-export const uploadPost = multer({ storage: postStorage });
-export const uploadMessageImage = multer({ storage: messageImageStorage });
+export const uploadProfile = multer({
+  storage: memoryStorage,
+  fileFilter: fileFilterFactory(["image/jpeg", "image/png"])
+});
+
+export const uploadPost = multer({
+  storage: memoryStorage,
+  fileFilter: fileFilterFactory(["image/jpeg", "image/png"])
+});
+
+export const uploadMessageImage = multer({
+  storage: memoryStorage,
+  fileFilter: fileFilterFactory([
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp"
+  ])
+});
+
+export const handleUploadProfile = imageKitUploader(
+  "profile-pics",
+  "w-300,h-300,c-limit"
+);
+export const handleUploadPost = imageKitUploader(
+  "post",
+  "w-1080,h-1080,c-limit"
+);
+export const handleUploadMessageImage = imageKitUploader(
+  "message-images",
+  "w-1080,h-1080,c-limit"
+);
+export const handleUploadVideo = imageKitUploader("reels-videos");

@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
+import { CustomRequest } from "../types/user";
 
-export const uploadVideos = async (req: Request, res: Response) => {
+export const uploadVideos = async (req: CustomRequest, res: Response) => {
   try {
     const { title, description } = req.body;
-    const videoUrl = req.file?.path ?? "";
-
+    const videoUrl = req.uploadedFile?.url || req.file?.path || "";
     const thumbnail = videoUrl
       .replace("/upload/", "/upload/so_1,c_fill,w_300,h_300/")
       .replace(/\.(webm|mp4|mov)$/, ".jpg");
