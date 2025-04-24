@@ -110,6 +110,42 @@ export const requestAccept = async (req: Request, res: Response) => {
         }
       ]
     });
+    const receiver = await prisma.user.findUnique({
+      where: { id: existingRequest.receiverId },
+      select: { fcmToken: true, name: true }
+    });
+
+    const sender = await prisma.user.findUnique({
+      where: { id: existingRequest.senderId },
+      select: { fcmToken: true, name: true }
+    });
+
+    if (sender?.fcmToken) {
+      const message = {
+        token: sender?.fcmToken,
+        notification: {
+          title: "Friend Request Accepted",
+          body: `${receiver?.name} Accepted your friend request!`
+        },
+        android: {
+          priority: "high" as const,
+          notification: {
+            channelId: "default",
+            sound: "default",
+            defaultSound: true
+          }
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default"
+            }
+          }
+        }
+      };
+
+      await admin.messaging().send(message);
+    }
 
     return res.status(200).json({
       message: "Friend request accepted successfully.",
@@ -148,6 +184,43 @@ export const requestDecline = async (req: Request, res: Response) => {
     await prisma.friendRequest.delete({
       where: { id }
     });
+
+    const sender = await prisma.user.findUnique({
+      where: { id: existingRequest.senderId },
+      select: { fcmToken: true, name: true }
+    });
+
+    const receiver = await prisma.user.findUnique({
+      where: { id: existingRequest.receiverId },
+      select: { fcmToken: true, name: true }
+    });
+
+    if (sender?.fcmToken) {
+      const message = {
+        token: sender?.fcmToken,
+        notification: {
+          title: "Declined Your Friend Request",
+          body: `${receiver?.name} Declined your friend request!`
+        },
+        android: {
+          priority: "high" as const,
+          notification: {
+            channelId: "default",
+            sound: "default",
+            defaultSound: true
+          }
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default"
+            }
+          }
+        }
+      };
+
+      await admin.messaging().send(message);
+    }
 
     res.status(200).json({ message: "Friend request declined successfully." });
   } catch (err: any) {
