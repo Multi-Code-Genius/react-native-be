@@ -44,19 +44,34 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
               }
             },
             include: {
-              Room: true
+              Room: {
+                include: {
+                  RoomUser: {
+                    include: {
+                      User: {
+                        select: {
+                          id: true,
+                          email: true,
+                          name: true,
+                          profile_pic: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           });
 
           if (activeRoomUser) {
             return {
               room: activeRoomUser.Room,
-              alreadyJoined: true,
+              joined: true,
               message: "User is already in an active room."
             };
           }
 
-          let room = (await prisma.room.findFirst({
+          let room = await prisma.room.findFirst({
             where: {
               status: "open",
               capacity: { gt: 0 },
@@ -74,7 +89,7 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
             include: {
               RoomUser: true
             }
-          })) as any;
+          });
 
           if (room) {
             const count = room.RoomUser.length;
@@ -91,8 +106,26 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
               });
             }
 
+            const updatedRoom = await prisma.room.findUnique({
+              where: { id: room.id },
+              include: {
+                RoomUser: {
+                  include: {
+                    User: {
+                      select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        profile_pic: true
+                      }
+                    }
+                  }
+                }
+              }
+            });
+
             return {
-              room,
+              room: updatedRoom,
               joined: true,
               message: "Joined existing room"
             };
@@ -115,14 +148,23 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
             },
             include: {
               RoomUser: {
-                include: { User: true }
+                include: {
+                  User: {
+                    select: {
+                      id: true,
+                      email: true,
+                      name: true,
+                      profile_pic: true
+                    }
+                  }
+                }
               }
             }
           });
 
           return {
             room: newRoom,
-            created: true,
+            joined: true,
             message: "New Room created and joined"
           };
         });
@@ -138,6 +180,8 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
 
 export const deleteRoom = async (req: Request, res: Response) => {
   const { roomId } = req.params;
+
+  console.log("roomId", roomId);
 
   try {
     const room = await prisma.room.delete({

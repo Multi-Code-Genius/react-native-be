@@ -96,17 +96,17 @@ model Post {
   likes       Like[]
   user        User      @relation(fields: [userId], references: [id])
 }
-
 model RejectedRoom {
   id         String   @id @default(uuid())
   userId     String
   roomId     String
   rejectedAt DateTime @default(now())
-  Room       Room     @relation(fields: [roomId], references: [id])
-  User       User     @relation(fields: [userId], references: [id])
+  Room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roomId])
 }
+
 
 model Room {
   id           String         @id @default(uuid())

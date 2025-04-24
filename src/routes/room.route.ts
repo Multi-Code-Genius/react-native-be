@@ -14,7 +14,7 @@ route.post(
   authMiddleware,
   findOrCreateRoom as unknown as RequestHandler
 );
-route.delete("/delete/:roomId", authMiddleware, deleteRoom as RequestHandler);
+route.delete("/delete/:roomId", deleteRoom as RequestHandler);
 route.get("/", authMiddleware, getAllRooms as RequestHandler);
 route.get(
   "/reject/:roomId",
