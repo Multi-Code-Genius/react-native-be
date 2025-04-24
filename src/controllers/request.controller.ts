@@ -53,6 +53,10 @@ export const requestUser = async (req: Request, res: Response) => {
           title: "New Friend Request",
           body: `${sender?.name} sent you a friend request!`
         },
+        data: {
+          title: "New Friend Request",
+          body: `${sender?.name} sent you a friend request!`
+        },
         android: {
           priority: "high" as const,
           notification: {
@@ -124,6 +128,10 @@ export const requestAccept = async (req: Request, res: Response) => {
       const message = {
         token: sender?.fcmToken,
         notification: {
+          title: "Friend Request Accepted",
+          body: `${receiver?.name} Accepted your friend request!`
+        },
+        data: {
           title: "Friend Request Accepted",
           body: `${receiver?.name} Accepted your friend request!`
         },
@@ -199,6 +207,10 @@ export const requestDecline = async (req: Request, res: Response) => {
       const message = {
         token: sender?.fcmToken,
         notification: {
+          title: "Declined Your Friend Request",
+          body: `${receiver?.name} Declined your friend request!`
+        },
+        data: {
           title: "Declined Your Friend Request",
           body: `${receiver?.name} Declined your friend request!`
         },

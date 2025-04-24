@@ -62,6 +62,10 @@ export const initSocket = (server: any): void => {
                 title: `${sender?.name} has sent you a message`,
                 body: content
               },
+              data: {
+                title: `${sender?.name} has sent you a message`,
+                body: content
+              },
 
               android: {
                 priority: "high" as const,
