@@ -150,7 +150,8 @@ export default route;
  * @swagger
  * /api/room/reject/{roomId}:
  *   get:
- *     summary: Reject a room for the authenticated user
+ *     summary: Reject Room
+ *     description: Rejects a room for the authenticated user.
  *     tags:
  *       - Room
  *     security:
@@ -160,8 +161,9 @@ export default route;
  *         name: roomId
  *         schema:
  *           type: string
+ *           format: uuid
  *         required: true
- *         description: The ID of the room to reject
+ *         description: UUID of the room to reject
  *     responses:
  *       200:
  *         description: Room rejected successfully
@@ -172,13 +174,35 @@ export default route;
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Room rejected successfully"
+ *                   example: Room rejected successfully.
  *       400:
- *         description: Bad request – invalid or missing room ID
+ *         description: Bad request (already rejected or not found)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Room already rejected or not found.
  *       401:
- *         description: Unauthorized – missing or invalid token
- *       404:
- *         description: Room not found or already rejected
+ *         description: Unauthorized (invalid/missing token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Invalid or missing token.
  *       500:
- *         description: Server error
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Something went wrong.
  */

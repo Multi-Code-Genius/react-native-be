@@ -204,18 +204,20 @@ export const deleteRoom = async (req: Request, res: Response) => {
 export const getAllRooms = async (req: Request, res: Response) => {
   try {
     const room = await prisma.room.findMany({
+      where: { status: "open" },
       include: {
         RoomUser: {
           include: {
             User: {
               select: {
                 name: true,
+                id: true,
+                profile_pic: true,
                 email: true
               }
             }
           }
         }
-        // RejectedRoom: true
       }
     });
 
