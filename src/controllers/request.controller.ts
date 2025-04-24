@@ -189,6 +189,10 @@ export const requestDecline = async (req: Request, res: Response) => {
       }
     });
 
+    const request = await prisma.friendRequest.findUnique({
+      where: { id }
+    });
+
     await prisma.friendRequest.delete({
       where: { id }
     });
@@ -207,12 +211,24 @@ export const requestDecline = async (req: Request, res: Response) => {
       const message = {
         token: sender?.fcmToken,
         notification: {
-          title: "Declined Your Friend Request",
-          body: `${receiver?.name} Declined your friend request!`
+          title:
+            request?.status === "accepted"
+              ? "Removed You From Friend List"
+              : "Declined Friend Request",
+          body:
+            request?.status === "accepted"
+              ? `${receiver?.name} Removed You From Friend List!`
+              : `${receiver?.name} Declined your friend request!`
         },
         data: {
-          title: "Declined Your Friend Request",
-          body: `${receiver?.name} Declined your friend request!`
+          title:
+            request?.status === "accepted"
+              ? "Removed You From Friend List"
+              : "Declined Friend Request",
+          body:
+            request?.status === "accepted"
+              ? `${receiver?.name} Removed You From Friend List!`
+              : `${receiver?.name} Declined your friend request!`
         },
         android: {
           priority: "high" as const,
