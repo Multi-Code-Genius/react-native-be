@@ -145,3 +145,40 @@ export default route;
  *       500:
  *         description: Server error
  */
+
+/**
+ * @swagger
+ * /api/room/reject/{roomId}:
+ *   get:
+ *     summary: Reject a room for the authenticated user
+ *     tags:
+ *       - Room
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the room to reject
+ *     responses:
+ *       200:
+ *         description: Room rejected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Room rejected successfully"
+ *       400:
+ *         description: Bad request – invalid or missing room ID
+ *       401:
+ *         description: Unauthorized – missing or invalid token
+ *       404:
+ *         description: Room not found or already rejected
+ *       500:
+ *         description: Server error
+ */
