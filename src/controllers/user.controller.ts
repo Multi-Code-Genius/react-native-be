@@ -257,7 +257,10 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export const uploadProfilePicture = async (req: CustomRequest, res: Response) => {
+export const uploadProfilePicture = async (
+  req: CustomRequest,
+  res: Response
+) => {
   try {
     if (!req.file) {
       return res
@@ -352,9 +355,23 @@ export const getUserByid = async (
   res: Response
 ): Promise<void> => {
   try {
+    const id = req?.user?.userId;
+    const viewer = req.params.id;
+
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        },
         likes: {
           include: {
             user: {
@@ -366,13 +383,90 @@ export const getUserByid = async (
             }
           }
         },
-        videos: true
+        videos: true,
+        posts: true
       }
     });
 
+    const mutualFriends = await prisma.friend.findMany({
+      where: {
+        OR: [{ userId: viewer }, { friendId: viewer }]
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+            isOnline: true,
+            email: true,
+            location: true,
+            lastSeen: true
+          }
+        },
+        friend: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            location: true,
+            profile_pic: true,
+            isOnline: true,
+            lastSeen: true
+          }
+        }
+      }
+    });
+
+    const friendsData = mutualFriends.map((fr) => {
+      const friendUser = fr.user.id === viewer ? fr.friend : fr.user;
+      return {
+        id: friendUser.id,
+        data: friendUser
+      };
+    });
+
+    const friendIds = friendsData.map((f) => f.id);
+
+    const allFriendRequests = await prisma.friendRequest.findMany({
+      where: {
+        OR: friendIds.flatMap((friendId) => [
+          { senderId: viewer, receiverId: friendId },
+          { senderId: friendId, receiverId: viewer }
+        ])
+      },
+      select: {
+        id: true,
+        senderId: true,
+        receiverId: true
+      }
+    });
+
+    const friendsWithRequestId = friendsData.map((friend) => {
+      const request = allFriendRequests.find(
+        (fr) =>
+          (fr.senderId === viewer && fr.receiverId === friend.id) ||
+          (fr.senderId === friend.id && fr.receiverId === viewer)
+      );
+
+      return {
+        ...friend.data,
+        friendRequestId: request?.id ?? null
+      };
+    });
+
+    const friends = Array.from(
+      new Map(friendsWithRequestId.map((f) => [f.id, f])).values()
+    );
+
+    const fullUserData = {
+      ...user,
+      friends
+    };
+
     res.status(200).json({
       message: "User data fetched successfully.",
-      user
+      user: fullUserData
     });
   } catch (error) {
     console.error("Error fetching users:", error);
