@@ -191,7 +191,7 @@ router.get("/ping", authMiddleware, pingOnline as RequestHandler);
  *         required: true
  *         description: ID of the user to delete
  *         schema:
- *           type: integer
+ *           type: string
  *     responses:
  *       200:
  *         description: User deleted successfully

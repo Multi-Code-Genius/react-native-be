@@ -1,6 +1,11 @@
 import express, { RequestHandler } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { deleteRoom, findOrCreateRoom } from "../controllers/room.controller";
+import {
+  deleteRoom,
+  findOrCreateRoom,
+  getAllRooms,
+  rejectRoom
+} from "../controllers/room.controller";
 
 const route = express.Router();
 
@@ -10,6 +15,12 @@ route.post(
   findOrCreateRoom as unknown as RequestHandler
 );
 route.delete("/delete/:roomId", authMiddleware, deleteRoom as RequestHandler);
+route.get("/", authMiddleware, getAllRooms as RequestHandler);
+route.get(
+  "/reject/:roomId",
+  authMiddleware,
+  rejectRoom as unknown as RequestHandler
+);
 
 export default route;
 
@@ -20,6 +31,8 @@ export default route;
  *     summary: Find or create a room based on user location and platform
  *     tags:
  *       - Room
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -41,8 +54,8 @@ export default route;
  *                 description: The longitude of the user's location.
  *               platform:
  *                 type: string
- *                 example: "platform Name"
- *                 description: The name of the platform or device.
+ *                 example: "Android"
+ *                 description: The platform or device name.
  *     responses:
  *       200:
  *         description: Room found or created successfully
@@ -50,13 +63,23 @@ export default route;
  *           application/json:
  *             schema:
  *               type: object
- *               example:
- *                 roomId: "12345"
- *                 status: "created"
+ *               properties:
+ *                 room:
+ *                   type: object
+ *                   description: The room object that was found or created.
+ *                 joined:
+ *                   type: boolean
+ *                   description: True if joined existing room.
+ *                 created:
+ *                   type: boolean
+ *                   description: True if a new room was created.
+ *                 message:
+ *                   type: string
+ *                   example: "Joined existing room"
  *       400:
- *         description: Bad request – missing or invalid parameters
+ *         description: Missing required fields.
  *       500:
- *         description: Server error
+ *         description: Server error.
  */
 
 /**
@@ -88,6 +111,37 @@ export default route;
  *         description: Unauthorized – missing or invalid token
  *       404:
  *         description: Room not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/room:
+ *   get:
+ *     summary: Get room information for the authenticated user
+ *     tags:
+ *       - Room
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved room details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 room:
+ *                   type: object
+ *                   description: Room information the user is part of
+ *                 message:
+ *                   type: string
+ *                   example: "Room details retrieved successfully"
+ *       401:
+ *         description: Unauthorized – missing or invalid token
+ *       404:
+ *         description: No active room found for the user
  *       500:
  *         description: Server error
  */
