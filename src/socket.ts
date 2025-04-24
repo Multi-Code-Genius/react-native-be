@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { prisma } from "./utils/prisma";
-import { sendMessageNotification } from "./helper/sendMessageNotification";
+import admin from "./config/firebase.config";
 
 export let io: Server;
 
@@ -47,41 +47,40 @@ export const initSocket = (server: any): void => {
         if (senderSocketId) {
           io.to(senderSocketId).emit("newMessage", newMessage);
         }
-      } else {
-        console.log("🔴 Receiver not connected, sending push notification...");
-        const receiver = await prisma.user.findUnique({
-          where: { id: receiverId }
-        });
-        if (receiver?.fcmToken) {
-          await sendMessageNotification(receiver.fcmToken, {
-            notification: {
-              title: "New Message",
-              body: content
-            },
-            data: {
-              senderId,
-              type: "message"
-            },
-            android: {
-              priority: "high",
+
+        if (!receiverSocketId) {
+          const receiver = await prisma.user.findUnique({
+            where: { id: receiverId }
+          });
+          const sender = await prisma.user.findUnique({
+            where: { id: senderId }
+          });
+          if (receiver?.fcmToken) {
+            const message = {
+              token: receiver.fcmToken,
               notification: {
-                channelId: "default",
-                sound: "default",
-                defaultSound: true
-              }
-            },
-            apns: {
-              payload: {
-                aps: {
-                  alert: {
-                    title: "New Message",
-                    body: content
-                  },
-                  sound: "default"
+                title: `${sender?.name} has sent you a message`,
+                body: content
+              },
+
+              android: {
+                priority: "high" as const,
+                notification: {
+                  channelId: "default",
+                  sound: "default",
+                  defaultSound: true
+                }
+              },
+              apns: {
+                payload: {
+                  aps: {
+                    sound: "default"
+                  }
                 }
               }
-            }
-          });
+            };
+            await admin.messaging().send(message);
+          }
         }
       }
     });

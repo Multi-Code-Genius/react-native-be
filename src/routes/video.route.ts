@@ -16,6 +16,7 @@ router.post(
   "/upload-video",
   authMiddleware,
   uploadVideo.single("video"),
+  handleUploadVideo,
   uploadVideos
 );
 router.get("/", authMiddleware, getVideos as RequestHandler);
