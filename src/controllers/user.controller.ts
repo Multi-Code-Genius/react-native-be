@@ -80,7 +80,8 @@ export const getProfile = async (req: Request, res: Response) => {
               }
             }
           }
-        }
+        },
+        RoomUser: true
       }
     });
 
