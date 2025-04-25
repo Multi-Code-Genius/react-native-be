@@ -4,6 +4,7 @@ import {
   deleteRoom,
   findOrCreateRoom,
   getAllRooms,
+  getRoomById,
   rejectRoom
 } from "../controllers/room.controller";
 
@@ -15,6 +16,7 @@ route.post(
   findOrCreateRoom as unknown as RequestHandler
 );
 route.delete("/delete/:roomId", deleteRoom as RequestHandler);
+route.get("/fetch/:roomId", getRoomById as unknown as RequestHandler);
 route.get("/", authMiddleware, getAllRooms as RequestHandler);
 route.get(
   "/reject/:roomId",
@@ -205,4 +207,45 @@ export default route;
  *                 error:
  *                   type: string
  *                   example: Something went wrong.
+ */
+
+/**
+ * @swagger
+ * /api/room/fetch/{roomId}:
+ *   get:
+ *     summary: Fetch a room by room ID
+ *     tags:
+ *       - Room
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the room to fetch
+ *     responses:
+ *       200:
+ *         description: Successfully fetched the room
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 room:
+ *                   type: object
+ *                   description: Room details
+ *                 joined:
+ *                   type: boolean
+ *                   description: Whether the user has joined the room
+ *                 message:
+ *                   type: string
+ *                   description: Status message
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       404:
+ *         description: Room not found
+ *       500:
+ *         description: Internal server error
  */

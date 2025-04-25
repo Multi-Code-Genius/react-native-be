@@ -247,7 +247,6 @@ export const rejectRoom = async (req: Request, res: Response) => {
   try {
     const room = await prisma.room.findUnique({
       where: { id: roomId },
-
       include: { RoomUser: true }
     });
 
@@ -288,6 +287,45 @@ export const rejectRoom = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Room rejected successfully." });
   } catch (error: any) {
     console.error("Error rejecting room:", error);
+    return res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+export const getRoomById = async (req: Request, res: Response) => {
+  try {
+    const { roomId } = req.params;
+
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        RoomUser: {
+          orderBy: {
+            joinedAt: "asc"
+          },
+          include: {
+            User: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                profile_pic: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found." });
+    }
+
+    return res.status(200).json({
+      message: "Joined existing room",
+      room,
+      joined: true
+    });
+  } catch (error: any) {
     return res.status(500).json({ message: error.message || "Server error" });
   }
 };
