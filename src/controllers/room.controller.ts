@@ -181,8 +181,6 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
 export const deleteRoom = async (req: Request, res: Response) => {
   const { roomId } = req.params;
 
-  console.log("roomId", roomId);
-
   try {
     const room = await prisma.room.delete({
       where: { id: roomId }
@@ -203,8 +201,16 @@ export const deleteRoom = async (req: Request, res: Response) => {
 
 export const getAllRooms = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.userId;
+
     const room = await prisma.room.findMany({
-      // where: { status: "open" },
+      where: {
+        RejectedRoom: {
+          none: {
+            userId
+          }
+        }
+      },
       include: {
         RoomUser: {
           include: {
@@ -325,6 +331,107 @@ export const getRoomById = async (req: Request, res: Response) => {
       room,
       joined: true
     });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+export const joinRoomById = async (req: Request, res: Response) => {
+  try {
+    const { roomId } = req.params;
+    const userId = (req as any).user?.userId;
+
+    const activeRoomUser = await prisma.roomUser.findFirst({
+      where: {
+        userId,
+        Room: {
+          status: {
+            not: "closed"
+          }
+        }
+      },
+      include: {
+        Room: {
+          include: {
+            RoomUser: {
+              include: {
+                User: {
+                  select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    profile_pic: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (activeRoomUser) {
+      return res.status(200).json({
+        room: activeRoomUser.Room,
+        joined: true,
+        message: "User is already in an active room."
+      });
+    }
+
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        RoomUser: true
+      }
+    });
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found." });
+    }
+
+    if (room.status !== "open") {
+      return res.status(501).json({ message: "Room not available" });
+    }
+
+    if (room) {
+      const count = room.RoomUser.length;
+
+      await prisma.roomUser.create({
+        data: { userId, roomId: room.id }
+      });
+
+      const updatedCount = count + 1;
+      if (updatedCount >= room.capacity) {
+        await prisma.room.update({
+          where: { id: room.id },
+          data: { status: "full" }
+        });
+      }
+
+      const updatedRoom = await prisma.room.findUnique({
+        where: { id: room.id },
+        include: {
+          RoomUser: {
+            include: {
+              User: {
+                select: {
+                  id: true,
+                  email: true,
+                  name: true,
+                  profile_pic: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      return {
+        room: updatedRoom,
+        joined: true,
+        message: "Joined existing room"
+      };
+    }
   } catch (error: any) {
     return res.status(500).json({ message: error.message || "Server error" });
   }

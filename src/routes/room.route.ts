@@ -5,6 +5,7 @@ import {
   findOrCreateRoom,
   getAllRooms,
   getRoomById,
+  joinRoomById,
   rejectRoom
 } from "../controllers/room.controller";
 
@@ -15,8 +16,19 @@ route.post(
   authMiddleware,
   findOrCreateRoom as unknown as RequestHandler
 );
-route.delete("/delete/:roomId", deleteRoom as RequestHandler);
-route.get("/fetch/:roomId", getRoomById as unknown as RequestHandler);
+route.delete("/delete/:roomId", authMiddleware, deleteRoom as RequestHandler);
+
+route.post(
+  "/join/:roomId",
+  authMiddleware,
+  joinRoomById as unknown as RequestHandler
+);
+
+route.get(
+  "/fetch/:roomId",
+  authMiddleware,
+  getRoomById as unknown as RequestHandler
+);
 route.get("/", authMiddleware, getAllRooms as RequestHandler);
 route.get(
   "/reject/:roomId",
