@@ -301,3 +301,43 @@ export default route;
  *       500:
  *         description: Internal server error
  */
+
+/**
+ * @swagger
+ * /api/room/join/{roomId}:
+ *   post:
+ *     summary: Join a specific room by room ID
+ *     tags:
+ *       - Room
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID of the room to join
+ *     responses:
+ *       200:
+ *         description: Room joined successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Joined the room successfully
+ *       400:
+ *         description: Invalid room ID or already joined
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Room not found
+ *       500:
+ *         description: Internal server error
+ */
