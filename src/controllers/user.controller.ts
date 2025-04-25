@@ -535,7 +535,43 @@ export const pingOnline = async (req: Request, res: Response) => {
     });
 
     res.json({ status: "active" });
-  } catch (err) {
-    res.status(500).json({ error: "Something went wrong" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Something went wrong" });
+  }
+};
+
+export const updateLocation = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { location } = req.body;
+
+    if (!location) {
+      res.status(401).json({ message: "Location Required" });
+      return;
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!existingUser) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const updateLocation: any = {};
+    if (location) updateLocation.location = location;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateLocation
+    });
+
+    res.status(200).json({
+      message: "User Location updated successfully",
+      user: updatedUser
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Something went wrong" });
   }
 };

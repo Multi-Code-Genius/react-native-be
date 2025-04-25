@@ -7,6 +7,7 @@ import {
   getUserByid,
   pingOnline,
   searchUser,
+  updateLocation,
   uploadProfilePicture
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
@@ -27,6 +28,12 @@ router.get("/all-user", authMiddleware, getAllUser as RequestHandler);
 router.get("/search", authMiddleware, searchUser as RequestHandler);
 router.get("/user-data/:id", authMiddleware, getUserByid as RequestHandler);
 router.get("/ping", authMiddleware, pingOnline as RequestHandler);
+
+router.patch(
+  "/location",
+  authMiddleware,
+  updateLocation as unknown as RequestHandler
+);
 
 // GET PROFILE /Get User route
 /**
@@ -377,6 +384,86 @@ router.get("/ping", authMiddleware, pingOnline as RequestHandler);
  *         description: Unauthorized - Invalid or missing token.
  *       500:
  *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /api/room/locations:
+ *   get:
+ *     summary: Get all room locations
+ *     description: Returns a list of room locations from the server.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of room locations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: 123e4567-e89b-12d3-a456-426614174000
+ *                   name:
+ *                     type: string
+ *                     example: Meeting Room A
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /api/user/location:
+ *   patch:
+ *     summary: Update user's current location
+ *     description: Allows an authenticated user to update their latitude and longitude.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               location:
+ *                 type: object
+ *                 required:
+ *                   - latitude
+ *                   - longitude
+ *                 properties:
+ *                   latitude:
+ *                     type: number
+ *                     example: 19.076
+ *                   longitude:
+ *                     type: number
+ *                     example: 72.8777
+ *     responses:
+ *       200:
+ *         description: Location updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Location updated
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       500:
+ *         description: Internal Server Error
  */
 
 export default router;

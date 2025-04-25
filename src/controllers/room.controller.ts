@@ -23,11 +23,41 @@ const retryTransaction = async (
 };
 
 export const findOrCreateRoom = async (req: Request, res: Response) => {
-  const { latitude, longitude, platform }: any = req.body;
+  const { latitude, longitude }: any = req.body;
   const userId = (req as any).user?.userId;
 
-  if (!latitude || !longitude || !platform) {
+  if (!latitude || !longitude) {
     return res.status(400).json({ message: "Missing required fields." });
+  }
+
+  function generateReadableName(): string {
+    const adjectives = [
+      "Fast",
+      "Blue",
+      "Happy",
+      "Lazy",
+      "Clever",
+      "Brave",
+      "Chill",
+      "Witty"
+    ];
+    const nouns = [
+      "Fox",
+      "Tiger",
+      "Panda",
+      "Hawk",
+      "Wolf",
+      "Eagle",
+      "Lion",
+      "Bear"
+    ];
+
+    const randomAdjective =
+      adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+    const randomNumber = Math.floor(10 + Math.random() * 90);
+
+    return `${randomAdjective}${randomNoun}${randomNumber}`;
   }
 
   try {
@@ -133,7 +163,7 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
 
           const newRoom = await prisma.room.create({
             data: {
-              platform,
+              platform: generateReadableName(),
               location: {
                 lat: latitude,
                 lng: longitude
@@ -373,7 +403,7 @@ export const joinRoomById = async (req: Request, res: Response) => {
     if (activeRoomUser) {
       return res.status(200).json({
         room: activeRoomUser.Room,
-        joined: true,
+        joined: false,
         message: "User is already in an active room."
       });
     }
@@ -434,5 +464,36 @@ export const joinRoomById = async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     return res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+export const getAllLocations = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    const users = await prisma.user.findMany({
+      where: {
+        NOT: {
+          id: userId
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        isOnline: true,
+        lastSeen: true,
+        location: true,
+        profile_pic: true
+      }
+    });
+
+    return res.status(200).json({
+      message: "Fetched User Locations",
+      usersWithLocations: users
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || "Server error"
+    });
   }
 };

@@ -3,6 +3,7 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   deleteRoom,
   findOrCreateRoom,
+  getAllLocations,
   getAllRooms,
   getRoomById,
   joinRoomById,
@@ -34,6 +35,12 @@ route.get(
   "/reject/:roomId",
   authMiddleware,
   rejectRoom as unknown as RequestHandler
+);
+
+route.get(
+  "/locations",
+  authMiddleware,
+  getAllLocations as unknown as RequestHandler
 );
 
 export default route;
