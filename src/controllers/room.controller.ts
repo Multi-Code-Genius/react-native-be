@@ -23,12 +23,7 @@ const retryTransaction = async (
 };
 
 export const findOrCreateRoom = async (req: Request, res: Response) => {
-  const { latitude, longitude, platform }: any = req.body;
   const userId = (req as any).user?.userId;
-
-  if (!latitude || !longitude) {
-    return res.status(400).json({ message: "Missing required fields." });
-  }
 
   const user = await prisma.user.findUnique({
     where: {
