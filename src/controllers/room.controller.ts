@@ -199,8 +199,8 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
             data: {
               platform: generateReadableName(),
               location: {
-                lat: latitude,
-                lng: longitude,
+                lat: location.latitude,
+                lng: location.longitude,
               },
               capacity: 3,
               status: "open",
