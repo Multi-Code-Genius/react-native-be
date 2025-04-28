@@ -23,12 +23,35 @@ const retryTransaction = async (
 };
 
 export const findOrCreateRoom = async (req: Request, res: Response) => {
-  const { latitude, longitude }: any = req.body;
+  const { latitude, longitude, platform }: any = req.body;
   const userId = (req as any).user?.userId;
 
   if (!latitude || !longitude) {
     return res.status(400).json({ message: "Missing required fields." });
   }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user || !user.location) {
+    return res.status(400).json({ message: "User location not found" });
+  }
+
+  const location = user.location as { latitude: number; longitude: number };
+  const userLatitude = location.latitude;
+  const userLongitude = location.longitude;
+
+  const latDegreeDistance = 10 / 111;
+  const lngDegreeDistance =
+    10 / (111 * Math.cos(userLatitude * (Math.PI / 180)));
+
+  const minLat = userLatitude - latDegreeDistance;
+  const maxLat = userLatitude + latDegreeDistance;
+  const minLng = userLongitude - lngDegreeDistance;
+  const maxLng = userLongitude + lngDegreeDistance;
 
   function generateReadableName(): string {
     const adjectives = [
@@ -39,7 +62,7 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
       "Clever",
       "Brave",
       "Chill",
-      "Witty"
+      "Witty",
     ];
     const nouns = [
       "Fox",
@@ -49,7 +72,7 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
       "Wolf",
       "Eagle",
       "Lion",
-      "Bear"
+      "Bear",
     ];
 
     const randomAdjective =
@@ -69,9 +92,9 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
               userId,
               Room: {
                 status: {
-                  not: "closed"
-                }
-              }
+                  not: "closed",
+                },
+              },
             },
             include: {
               Room: {
@@ -83,21 +106,21 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
                           id: true,
                           email: true,
                           name: true,
-                          profile_pic: true
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                          profile_pic: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           });
 
           if (activeRoomUser) {
             return {
               room: activeRoomUser.Room,
               joined: true,
-              message: "User is already in an active room."
+              message: "User is already in an active room.",
             };
           }
 
@@ -107,32 +130,48 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
               capacity: { gt: 0 },
               RoomUser: {
                 none: {
-                  userId
-                }
+                  userId,
+                },
               },
               RejectedRoom: {
                 none: {
-                  userId
-                }
-              }
+                  userId,
+                },
+              },
+              AND: [
+                {
+                  location: {
+                    path: ["lat"],
+                    gte: minLat,
+                    lte: maxLat,
+                  },
+                },
+                {
+                  location: {
+                    path: ["lng"],
+                    gte: minLng,
+                    lte: maxLng,
+                  },
+                },
+              ],
             },
             include: {
-              RoomUser: true
-            }
+              RoomUser: true,
+            },
           });
 
           if (room) {
             const count = room.RoomUser.length;
 
             await prisma.roomUser.create({
-              data: { userId, roomId: room.id }
+              data: { userId, roomId: room.id },
             });
 
             const updatedCount = count + 1;
             if (updatedCount >= room.capacity) {
               await prisma.room.update({
                 where: { id: room.id },
-                data: { status: "full" }
+                data: { status: "full" },
               });
             }
 
@@ -146,18 +185,18 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
                         id: true,
                         email: true,
                         name: true,
-                        profile_pic: true
-                      }
-                    }
-                  }
-                }
-              }
+                        profile_pic: true,
+                      },
+                    },
+                  },
+                },
+              },
             });
 
             return {
               room: updatedRoom,
               joined: true,
-              message: "Joined existing room"
+              message: "Joined existing room",
             };
           }
 
@@ -166,15 +205,15 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
               platform: generateReadableName(),
               location: {
                 lat: latitude,
-                lng: longitude
+                lng: longitude,
               },
               capacity: 3,
               status: "open",
               RoomUser: {
                 create: {
-                  userId
-                }
-              }
+                  userId,
+                },
+              },
             },
             include: {
               RoomUser: {
@@ -184,18 +223,18 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
                       id: true,
                       email: true,
                       name: true,
-                      profile_pic: true
-                    }
-                  }
-                }
-              }
-            }
+                      profile_pic: true,
+                    },
+                  },
+                },
+              },
+            },
           });
 
           return {
             room: newRoom,
             joined: true,
-            message: "New Room created and joined"
+            message: "New Room created and joined",
           };
         });
       });
@@ -213,7 +252,7 @@ export const deleteRoom = async (req: Request, res: Response) => {
 
   try {
     const room = await prisma.room.delete({
-      where: { id: roomId }
+      where: { id: roomId },
     });
 
     if (!room) {
@@ -233,13 +272,52 @@ export const getAllRooms = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
 
-    const room = await prisma.room.findMany({
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user || !user.location) {
+      return res.status(400).json({ message: "User location not found" });
+    }
+
+    const location = user.location as { latitude: number; longitude: number };
+    const userLatitude = location.latitude;
+    const userLongitude = location.longitude;
+
+    const latDegreeDistance = 10 / 111;
+    const lngDegreeDistance =
+      10 / (111 * Math.cos(userLatitude * (Math.PI / 180)));
+
+    const minLat = userLatitude - latDegreeDistance;
+    const maxLat = userLatitude + latDegreeDistance;
+    const minLng = userLongitude - lngDegreeDistance;
+    const maxLng = userLongitude + lngDegreeDistance;
+
+    const rooms = await prisma.room.findMany({
       where: {
         RejectedRoom: {
           none: {
-            userId
-          }
-        }
+            userId,
+          },
+        },
+        AND: [
+          {
+            location: {
+              path: ["lat"],
+              gte: minLat,
+              lte: maxLat,
+            },
+          },
+          {
+            location: {
+              path: ["lng"],
+              gte: minLng,
+              lte: maxLng,
+            },
+          },
+        ],
       },
       include: {
         RoomUser: {
@@ -249,32 +327,32 @@ export const getAllRooms = async (req: Request, res: Response) => {
                 name: true,
                 id: true,
                 profile_pic: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
+                email: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!room) {
-      res.status(500).json({ message: "Room Does not Exit" });
+    if (!rooms || rooms.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No rooms found near your location" });
     }
 
-    res.status(200).json({ room });
+    res.status(200).json({ rooms });
   } catch (error: any) {
-    console.error("Error deleting room:", error);
+    console.error("Error fetching rooms:", error);
     res
       .status(500)
-      .json({ message: error.message || "Server error while deleting room" });
+      .json({ message: error.message || "Server error while fetching rooms" });
   }
 };
 
 export const rejectRoom = async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
   const { roomId } = req.params;
-
-  console.log("roomId", roomId, userId);
 
   if (!roomId) {
     return res.status(400).json({ message: "roomId is required." });
@@ -283,7 +361,7 @@ export const rejectRoom = async (req: Request, res: Response) => {
   try {
     const room = await prisma.room.findUnique({
       where: { id: roomId },
-      include: { RoomUser: true }
+      include: { RoomUser: true },
     });
 
     if (!room) {
@@ -292,30 +370,30 @@ export const rejectRoom = async (req: Request, res: Response) => {
 
     await prisma.rejectedRoom.upsert({
       where: {
-        userId_roomId: { userId, roomId }
+        userId_roomId: { userId, roomId },
       },
       update: {},
       create: {
         userId,
-        roomId
-      }
+        roomId,
+      },
     });
 
     const roomUser = await prisma.roomUser.findFirst({
-      where: { userId, roomId }
+      where: { userId, roomId },
     });
 
     if (roomUser) {
       await prisma.roomUser.delete({ where: { id: roomUser.id } });
 
       const remaining = await prisma.roomUser.count({
-        where: { roomId }
+        where: { roomId },
       });
 
       if (room.status === "full" && remaining < room.capacity) {
         await prisma.room.update({
           where: { id: roomId },
-          data: { status: "open" }
+          data: { status: "open" },
         });
       }
     }
@@ -336,7 +414,7 @@ export const getRoomById = async (req: Request, res: Response) => {
       include: {
         RoomUser: {
           orderBy: {
-            joinedAt: "asc"
+            joinedAt: "asc",
           },
           include: {
             User: {
@@ -344,12 +422,12 @@ export const getRoomById = async (req: Request, res: Response) => {
                 id: true,
                 email: true,
                 name: true,
-                profile_pic: true
-              }
-            }
-          }
-        }
-      }
+                profile_pic: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!room) {
@@ -359,7 +437,7 @@ export const getRoomById = async (req: Request, res: Response) => {
     return res.status(200).json({
       message: "Joined existing room",
       room,
-      joined: true
+      joined: true,
     });
   } catch (error: any) {
     return res.status(500).json({ message: error.message || "Server error" });
@@ -376,9 +454,9 @@ export const joinRoomById = async (req: Request, res: Response) => {
         userId,
         Room: {
           status: {
-            not: "closed"
-          }
-        }
+            not: "closed",
+          },
+        },
       },
       include: {
         Room: {
@@ -390,29 +468,29 @@ export const joinRoomById = async (req: Request, res: Response) => {
                     id: true,
                     email: true,
                     name: true,
-                    profile_pic: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    profile_pic: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (activeRoomUser) {
       return res.status(200).json({
         room: activeRoomUser.Room,
         joined: false,
-        message: "User is already in an active room."
+        message: "User is already in an active room.",
       });
     }
 
     const room = await prisma.room.findUnique({
       where: { id: roomId },
       include: {
-        RoomUser: true
-      }
+        RoomUser: true,
+      },
     });
 
     if (!room) {
@@ -427,14 +505,14 @@ export const joinRoomById = async (req: Request, res: Response) => {
       const count = room.RoomUser.length;
 
       await prisma.roomUser.create({
-        data: { userId, roomId: room.id }
+        data: { userId, roomId: room.id },
       });
 
       const updatedCount = count + 1;
       if (updatedCount >= room.capacity) {
         await prisma.room.update({
           where: { id: room.id },
-          data: { status: "full" }
+          data: { status: "full" },
         });
       }
 
@@ -448,18 +526,18 @@ export const joinRoomById = async (req: Request, res: Response) => {
                   id: true,
                   email: true,
                   name: true,
-                  profile_pic: true
-                }
-              }
-            }
-          }
-        }
+                  profile_pic: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       return {
         room: updatedRoom,
         joined: true,
-        message: "Joined existing room"
+        message: "Joined existing room",
       };
     }
   } catch (error: any) {
@@ -474,8 +552,8 @@ export const getAllLocations = async (req: Request, res: Response) => {
     const users = await prisma.user.findMany({
       where: {
         NOT: {
-          id: userId
-        }
+          id: userId,
+        },
       },
       select: {
         id: true,
@@ -483,17 +561,17 @@ export const getAllLocations = async (req: Request, res: Response) => {
         isOnline: true,
         lastSeen: true,
         location: true,
-        profile_pic: true
-      }
+        profile_pic: true,
+      },
     });
 
     return res.status(200).json({
       message: "Fetched User Locations",
-      usersWithLocations: users
+      usersWithLocations: users,
     });
   } catch (error: any) {
     return res.status(500).json({
-      message: error.message || "Server error"
+      message: error.message || "Server error",
     });
   }
 };
