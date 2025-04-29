@@ -9,7 +9,7 @@ import {
   EMAIL_USER,
   SECRET_KEY,
   BASE_URL,
-  GOOGLE_CLIENT_ID
+  GOOGLE_CLIENT_ID,
 } from "../config/env";
 import { OAuth2Client } from "google-auth-library";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -19,7 +19,7 @@ export const register = async (req: Request, res: Response) => {
     const { name, email, password }: UserData = req.body;
 
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (existingUser) {
@@ -33,8 +33,8 @@ export const register = async (req: Request, res: Response) => {
       data: {
         email,
         password: hashedPassword ?? "",
-        ...(name && { name })
-      }
+        ...(name && { name }),
+      },
     });
 
     if (!SECRET_KEY) {
@@ -47,7 +47,7 @@ export const register = async (req: Request, res: Response) => {
       { userId: user.id, name: user.name, email: user.email },
       SECRET_KEY,
       {
-        expiresIn: "7d"
+        expiresIn: "7d",
       }
     );
 
@@ -69,10 +69,7 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (
-      !user
-      // || !(await bcrypt.compare(password, user.password ?? ""))
-    ) {
+    if (!user || !(await bcrypt.compare(password, user.password ?? ""))) {
       res.status(401).json({ message: "Invalid credentials" });
       return;
     }
@@ -87,7 +84,7 @@ export const login = async (req: Request, res: Response) => {
       { userId: user.id, name: user.name, email: user.email },
       SECRET_KEY,
       {
-        expiresIn: "7d"
+        expiresIn: "7d",
       }
     );
 
@@ -95,7 +92,7 @@ export const login = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({
-      message: error instanceof Error ? error.message : "Error logging in"
+      message: error instanceof Error ? error.message : "Error logging in",
     });
   }
 };
@@ -106,7 +103,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
     if (!user) return res.status(400).json({ message: "User not found" });
@@ -118,8 +115,8 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       where: { email },
       data: {
         resetToken: token,
-        resetTokenExpiry: expiry
-      }
+        resetTokenExpiry: expiry,
+      },
     });
 
     const resetLink = `${BASE_URL}/reset-redirect?token=${token}`;
@@ -133,7 +130,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
         <p>Click the link below to reset your password:</p>
         <a href="${resetLink}">${resetLink}</a>
         <p>This link will expire in 15 minutes.</p>
-      `
+      `,
     });
 
     return res.status(200).json({ message: "Reset link sent to your email" });
@@ -158,9 +155,9 @@ export const resetPassword = async (req: Request, res: Response) => {
       where: {
         resetToken: token,
         resetTokenExpiry: {
-          gte: new Date()
-        }
-      }
+          gte: new Date(),
+        },
+      },
     });
 
     if (!user) {
@@ -176,8 +173,8 @@ export const resetPassword = async (req: Request, res: Response) => {
       data: {
         password: hashedPassword,
         resetToken: null,
-        resetTokenExpiry: null
-      }
+        resetTokenExpiry: null,
+      },
     });
 
     return res.status(200).json({ message: "Password reset successful" });
@@ -193,7 +190,7 @@ export const googleLogin = async (req: Request, res: Response) => {
   try {
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: GOOGLE_CLIENT_ID
+      audience: GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
@@ -212,15 +209,15 @@ export const googleLogin = async (req: Request, res: Response) => {
       data: {
         email: email ?? "",
         profile_pic: picture ?? "",
-        ...(name && { name })
-      }
+        ...(name && { name }),
+      },
     });
 
     const token = jwt.sign(
       { userId: newUser.id, name: newUser.name, email: newUser.email },
       SECRET_KEY!,
       {
-        expiresIn: "7d"
+        expiresIn: "7d",
       }
     );
 

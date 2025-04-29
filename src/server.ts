@@ -20,6 +20,7 @@ import http from "http";
 import { initSocket } from "./socket";
 import cron from "node-cron";
 import { markInactiveUsersOffline } from "./cron/markOffline";
+import { updateRoomStatus } from "./cron/updateRoomStatus";
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use("/api/messages", messageRoutes);
 
 cron.schedule("* * * * *", () => {
   markInactiveUsersOffline();
+  updateRoomStatus();
 });
 
 app.get("/reset-redirect", (req, res) => {
@@ -59,7 +61,7 @@ app.get("/", (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });

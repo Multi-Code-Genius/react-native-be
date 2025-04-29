@@ -114,10 +114,13 @@ model Room {
   location     Json
   status       String         @default("open")
   createdAt    DateTime       @default(now())
+  updatedAt    DateTime?      // Nullable
   capacity     Int
   RejectedRoom RejectedRoom[]
   RoomUser     RoomUser[]
 }
+
+
 
 model RoomUser {
   id       String   @id @default(uuid())
