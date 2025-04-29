@@ -1,0 +1,33 @@
+# .github/workflows/deploy.yml
+name: Deploy Backend to Render
+
+on:
+  push:
+    branches:
+      - main # or 'master' or any branch you want to trigger deployment from
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # or your project's Node.js version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run build (optional if you use TypeScript or build steps)
+        run: npm run build
+
+      # Optional: Run tests
+      # - name: Run tests
+      #   run: npm test
+
+      - name: Deploy to Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
