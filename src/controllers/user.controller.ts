@@ -22,8 +22,8 @@ export const getProfile = async (req: Request, res: Response) => {
       include: {
         messagesReceived: {
           where: {
-            read: false
-          }
+            read: false,
+          },
         },
         comments: {
           include: {
@@ -31,10 +31,10 @@ export const getProfile = async (req: Request, res: Response) => {
               select: {
                 id: true,
                 name: true,
-                profile_pic: true
-              }
-            }
-          }
+                profile_pic: true,
+              },
+            },
+          },
         },
         likes: {
           include: {
@@ -42,16 +42,16 @@ export const getProfile = async (req: Request, res: Response) => {
               select: {
                 id: true,
                 name: true,
-                profile_pic: true
-              }
-            }
-          }
+                profile_pic: true,
+              },
+            },
+          },
         },
         videos: true,
         posts: true,
         sentRequests: {
           where: {
-            status: "pending"
+            status: "pending",
           },
           include: {
             receiver: {
@@ -60,14 +60,14 @@ export const getProfile = async (req: Request, res: Response) => {
                 name: true,
                 profile_pic: true,
                 isOnline: true,
-                lastSeen: true
-              }
-            }
-          }
+                lastSeen: true,
+              },
+            },
+          },
         },
         receivedRequests: {
           where: {
-            status: "pending"
+            status: "pending",
           },
           include: {
             sender: {
@@ -76,13 +76,13 @@ export const getProfile = async (req: Request, res: Response) => {
                 name: true,
                 profile_pic: true,
                 isOnline: true,
-                lastSeen: true
-              }
-            }
-          }
+                lastSeen: true,
+              },
+            },
+          },
         },
-        RoomUser: true
-      }
+        RoomUser: true,
+      },
     });
 
     if (!user) {
@@ -91,7 +91,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
     const mutualFriends = await prisma.friend.findMany({
       where: {
-        OR: [{ userId: id }, { friendId: id }]
+        OR: [{ userId: id }, { friendId: id }],
       },
       include: {
         user: {
@@ -102,8 +102,8 @@ export const getProfile = async (req: Request, res: Response) => {
             isOnline: true,
             email: true,
             location: true,
-            lastSeen: true
-          }
+            lastSeen: true,
+          },
         },
         friend: {
           select: {
@@ -113,17 +113,17 @@ export const getProfile = async (req: Request, res: Response) => {
             location: true,
             profile_pic: true,
             isOnline: true,
-            lastSeen: true
-          }
-        }
-      }
+            lastSeen: true,
+          },
+        },
+      },
     });
 
     const friendsData = mutualFriends.map((fr) => {
       const friendUser = fr.user.id === id ? fr.friend : fr.user;
       return {
         id: friendUser.id,
-        data: friendUser
+        data: friendUser,
       };
     });
 
@@ -133,14 +133,14 @@ export const getProfile = async (req: Request, res: Response) => {
       where: {
         OR: friendIds.flatMap((friendId) => [
           { senderId: id, receiverId: friendId },
-          { senderId: friendId, receiverId: id }
-        ])
+          { senderId: friendId, receiverId: id },
+        ]),
       },
       select: {
         id: true,
         senderId: true,
-        receiverId: true
-      }
+        receiverId: true,
+      },
     });
 
     const friendsWithRequestId = friendsData.map((friend) => {
@@ -152,7 +152,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
       return {
         ...friend.data,
-        friendRequestId: request?.id ?? null
+        friendRequestId: request?.id ?? null,
       };
     });
 
@@ -162,17 +162,17 @@ export const getProfile = async (req: Request, res: Response) => {
 
     const fullUserData = {
       ...user,
-      friends
+      friends,
     };
 
     res.status(200).json({
       message: "User Data Fetched successfully.",
-      user: fullUserData
+      user: fullUserData,
     });
   } catch (error: unknown) {
     console.error("User profile error:", error);
     res.status(500).json({
-      message: error instanceof Error ? error.message : "Internal server error"
+      message: error instanceof Error ? error.message : "Internal server error",
     });
   }
 };
@@ -190,7 +190,7 @@ export const UpdateUser = async (req: Request, res: Response) => {
     const id = req.user.userId;
 
     const existingUser = await prisma.user.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingUser) {
@@ -216,7 +216,7 @@ export const UpdateUser = async (req: Request, res: Response) => {
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
 
     res
@@ -238,7 +238,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
 
     const existingUser = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!existingUser) {
@@ -246,14 +246,15 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
 
     await prisma.user.delete({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     res.status(200).json({ message: "User deleted successfully." });
   } catch (error: unknown) {
     console.error("DeleteUser error:", error);
     res.status(500).json({
-      message: error instanceof Error ? error.message : "Internal server error."
+      message:
+        error instanceof Error ? error.message : "Internal server error.",
     });
   }
 };
@@ -275,7 +276,7 @@ export const uploadProfilePicture = async (
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { profile_pic: imageUrl }
+      data: { profile_pic: imageUrl },
     } as any);
 
     res
@@ -284,7 +285,7 @@ export const uploadProfilePicture = async (
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : "Unknown error"
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -298,16 +299,16 @@ export const getAllUser = async (
 
     const sent = await prisma.friendRequest.findMany({
       where: {
-        senderId: userId
+        senderId: userId,
       },
-      select: { receiverId: true }
+      select: { receiverId: true },
     });
 
     const received = await prisma.friendRequest.findMany({
       where: {
-        receiverId: userId
+        receiverId: userId,
       },
-      select: { senderId: true }
+      select: { senderId: true },
     });
 
     const sentIds = sent.map((req) => req.receiverId);
@@ -322,8 +323,8 @@ export const getAllUser = async (
     const users = await prisma.user.findMany({
       where: {
         id: {
-          notIn: excludeIds
-        }
+          notIn: excludeIds,
+        },
       },
       select: {
         id: true,
@@ -335,13 +336,13 @@ export const getAllUser = async (
         status: true,
         location: true,
         isOnline: true,
-        lastSeen: true
-      }
+        lastSeen: true,
+      },
     });
 
     res.status(200).json({
       message: "Suggested users fetched successfully.",
-      users
+      users,
     });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -368,10 +369,10 @@ export const getUserByid = async (
               select: {
                 id: true,
                 name: true,
-                profile_pic: true
-              }
-            }
-          }
+                profile_pic: true,
+              },
+            },
+          },
         },
         likes: {
           include: {
@@ -379,19 +380,19 @@ export const getUserByid = async (
               select: {
                 id: true,
                 name: true,
-                profile_pic: true
-              }
-            }
-          }
+                profile_pic: true,
+              },
+            },
+          },
         },
         videos: true,
-        posts: true
-      }
+        posts: true,
+      },
     });
 
     const mutualFriends = await prisma.friend.findMany({
       where: {
-        OR: [{ userId: viewer }, { friendId: viewer }]
+        OR: [{ userId: viewer }, { friendId: viewer }],
       },
       include: {
         user: {
@@ -402,8 +403,8 @@ export const getUserByid = async (
             isOnline: true,
             email: true,
             location: true,
-            lastSeen: true
-          }
+            lastSeen: true,
+          },
         },
         friend: {
           select: {
@@ -413,17 +414,17 @@ export const getUserByid = async (
             location: true,
             profile_pic: true,
             isOnline: true,
-            lastSeen: true
-          }
-        }
-      }
+            lastSeen: true,
+          },
+        },
+      },
     });
 
     const friendsData = mutualFriends.map((fr) => {
       const friendUser = fr.user.id === viewer ? fr.friend : fr.user;
       return {
         id: friendUser.id,
-        data: friendUser
+        data: friendUser,
       };
     });
 
@@ -433,14 +434,14 @@ export const getUserByid = async (
       where: {
         OR: friendIds.flatMap((friendId) => [
           { senderId: viewer, receiverId: friendId },
-          { senderId: friendId, receiverId: viewer }
-        ])
+          { senderId: friendId, receiverId: viewer },
+        ]),
       },
       select: {
         id: true,
         senderId: true,
-        receiverId: true
-      }
+        receiverId: true,
+      },
     });
 
     const friendsWithRequestId = friendsData.map((friend) => {
@@ -452,7 +453,7 @@ export const getUserByid = async (
 
       return {
         ...friend.data,
-        friendRequestId: request?.id ?? null
+        friendRequestId: request?.id ?? null,
       };
     });
 
@@ -462,12 +463,12 @@ export const getUserByid = async (
 
     const fullUserData = {
       ...user,
-      friends
+      friends,
     };
 
     res.status(200).json({
       message: "User data fetched successfully.",
-      user: fullUserData
+      user: fullUserData,
     });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -492,23 +493,23 @@ export const searchUser = async (req: Request, res: Response) => {
           {
             name: {
               contains: query,
-              mode: "insensitive"
-            }
+              mode: "insensitive",
+            },
           },
           {
             email: {
               contains: query,
-              mode: "insensitive"
-            }
-          }
-        ]
+              mode: "insensitive",
+            },
+          },
+        ],
       },
       select: {
         id: true,
         name: true,
         email: true,
-        profile_pic: true
-      }
+        profile_pic: true,
+      },
     });
 
     res.status(200).json({ message: "Search results", users });
@@ -530,8 +531,8 @@ export const pingOnline = async (req: Request, res: Response) => {
       where: { id: userId },
       data: {
         isOnline: true,
-        lastSeen: new Date()
-      }
+        lastSeen: new Date(),
+      },
     });
 
     res.json({ status: "active" });
@@ -551,7 +552,7 @@ export const updateLocation = async (req: Request, res: Response) => {
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!existingUser) {
@@ -564,12 +565,12 @@ export const updateLocation = async (req: Request, res: Response) => {
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: updateLocation
+      data: updateLocation,
     });
 
     res.status(200).json({
       message: "User Location updated successfully",
-      user: updatedUser
+      user: updatedUser,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || "Something went wrong" });

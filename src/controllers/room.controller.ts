@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 import { Mutex } from "async-mutex";
+import { generateReadableName } from "../helper/useGenerateReadableName";
 const roomMutex = new Mutex();
 
 const MAX_RETRIES = 3;
@@ -47,36 +48,6 @@ export const findOrCreateRoom = async (req: Request, res: Response) => {
   const maxLat = userLatitude + latDegreeDistance;
   const minLng = userLongitude - lngDegreeDistance;
   const maxLng = userLongitude + lngDegreeDistance;
-
-  function generateReadableName(): string {
-    const adjectives = [
-      "Fast",
-      "Blue",
-      "Happy",
-      "Lazy",
-      "Clever",
-      "Brave",
-      "Chill",
-      "Witty",
-    ];
-    const nouns = [
-      "Fox",
-      "Tiger",
-      "Panda",
-      "Hawk",
-      "Wolf",
-      "Eagle",
-      "Lion",
-      "Bear",
-    ];
-
-    const randomAdjective =
-      adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-    const randomNumber = Math.floor(10 + Math.random() * 90);
-
-    return `${randomAdjective}${randomNoun}${randomNumber}`;
-  }
 
   try {
     const result = await retryTransaction(async () => {
@@ -332,7 +303,7 @@ export const getAllRooms = async (req: Request, res: Response) => {
 
     if (!rooms || rooms.length === 0) {
       return res
-        .status(404)
+        .status(200)
         .json({ message: "No rooms found near your location" });
     }
 
