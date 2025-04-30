@@ -41,6 +41,9 @@ model User {
 
   messagesSent     Message[] @relation("SenderMessages")
   messagesReceived Message[] @relation("ReceiverMessages")
+
+  bookings Booking[]
+  payments Payment[]
 }
 
 model Video {
@@ -96,6 +99,7 @@ model Post {
   likes       Like[]
   user        User      @relation(fields: [userId], references: [id])
 }
+
 model RejectedRoom {
   id         String   @id @default(uuid())
   userId     String
@@ -107,20 +111,17 @@ model RejectedRoom {
   @@unique([userId, roomId])
 }
 
-
 model Room {
   id           String         @id @default(uuid())
   platform     String
   location     Json
   status       String         @default("open")
   createdAt    DateTime       @default(now())
-  updatedAt    DateTime?      // Nullable
+  updatedAt    DateTime? // Nullable
   capacity     Int
   RejectedRoom RejectedRoom[]
   RoomUser     RoomUser[]
 }
-
-
 
 model RoomUser {
   id       String   @id @default(uuid())
@@ -172,4 +173,93 @@ model Message {
 
   @@index([senderId, receiverId])
   @@index([receiverId, senderId])
+}
+
+model Game {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  images      String[]   @default([])
+  category    String
+  hourlyPrice Float
+  capacity    Int
+
+  location    Json        // changed from String to Json
+  address     String
+
+  gameInfo    Json?       // new JSON column
+  net         Float?      // new Float column
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  timeSlots   TimeSlot[]
+  bookings    Booking[]
+}
+
+
+
+model TimeSlot {
+  id         String   @id @default(uuid())
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId     String
+  date       DateTime
+  startTime  DateTime
+  endTime    DateTime
+  isBooked   Boolean  @default(false)
+
+  booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId  String?
+}
+
+
+model Booking {
+  id          String     @id @default(uuid())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  game        Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId      String
+
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  nets        Int          // 🔹 New: How many nets booked
+  totalAmount Float
+
+  payments    Payment[]
+  TimeSlot    TimeSlot[]
+}
+
+
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Payment {
+  id        String  @id @default(uuid())
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId String
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+
+  amount    Float
+  status    PaymentStatus @default(PENDING)
+  method    String?
+  createdAt DateTime      @default(now())
+}
+
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
 }

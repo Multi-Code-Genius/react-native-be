@@ -21,6 +21,9 @@ import { initSocket } from "./socket";
 import cron from "node-cron";
 import { markInactiveUsersOffline } from "./cron/markOffline";
 import { updateRoomStatus } from "./cron/updateRoomStatus";
+import { authMiddleware } from "./middlewares/authMiddleware";
+import bookingRoutes from "./routes/booking.route";
+import gameRoutes from "./routes/game.route";
 
 dotenv.config();
 
@@ -43,6 +46,8 @@ app.use("/api/room", roomRouter);
 app.use("/api/request", requestRouter);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/booking", bookingRoutes);
+app.use("/api/game", gameRoutes);
 
 cron.schedule("* * * * *", () => {
   markInactiveUsersOffline();

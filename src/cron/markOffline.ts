@@ -7,10 +7,10 @@ export const markInactiveUsersOffline = async () => {
   await prisma.user.updateMany({
     where: {
       lastSeen: { lt: cutoff },
-      isOnline: true
+      isOnline: true,
     },
     data: {
-      isOnline: false
-    }
+      isOnline: false,
+    },
   });
 };

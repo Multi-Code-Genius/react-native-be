@@ -9,10 +9,7 @@ export async function updateRoomStatus() {
     const roomStatusTime = room.updatedAt;
     const now = new Date();
 
-    if (
-      roomStatusTime != null &&
-      now.getTime() - new Date(roomStatusTime).getTime() >= 60 * 1000
-    ) {
+    if (true) {
       await prisma.room.update({
         where: { id: room.id },
         data: { status: "closed" },
