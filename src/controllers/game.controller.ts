@@ -78,3 +78,37 @@ export const locationBaseGames = async (req: Request, res: Response) => {
       .json({ success: false, error: "Failed to fetch games by location" });
   }
 };
+
+export const getGameByid = async (req: Request, res: Response) => {
+  try {
+    const { gameId } = req.params;
+
+    const game = await prisma.game.findUnique({
+      where: {
+        id: gameId,
+      },
+      include: {
+        bookings: {
+          select: {
+            date: true,
+            endTime: true,
+            startTime: true,
+            nets: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (!game) {
+      return res.status(404).json({ message: "Game is Not available" });
+    }
+
+    res.status(200).json({ message: "Games Fetched", game });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch game by Id" });
+  }
+};

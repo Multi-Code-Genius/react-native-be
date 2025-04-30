@@ -1,8 +1,9 @@
-import express, { Router } from "express";
+import express, { RequestHandler, Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   allGames,
   createGame,
+  getGameByid,
   locationBaseGames,
 } from "../controllers/game.controller";
 
@@ -11,6 +12,11 @@ const gameRoutes: Router = express.Router();
 gameRoutes.post("/create", authMiddleware, createGame);
 gameRoutes.get("/", authMiddleware, allGames);
 gameRoutes.get("/location/:city", authMiddleware, locationBaseGames);
+gameRoutes.get(
+  "/id/:gameId",
+  authMiddleware,
+  getGameByid as unknown as RequestHandler
+);
 
 export default gameRoutes;
 
@@ -123,4 +129,69 @@ export default gameRoutes;
  *         description: Unauthorized
  *       500:
  *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /api/game/id/{id}:
+ *   get:
+ *     summary: Get game by ID
+ *     description: Fetches details of a single game using its unique ID.
+ *     tags:
+ *       - Game
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Unique identifier of the game
+ *     responses:
+ *       200:
+ *         description: Game details fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 category:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 hourlyPrice:
+ *                   type: number
+ *                 capacity:
+ *                   type: number
+ *                 location:
+ *                   type: object
+ *                   properties:
+ *                     city:
+ *                       type: string
+ *                     area:
+ *                       type: string
+ *                 address:
+ *                   type: string
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 gameInfo:
+ *                   type: object
+ *                   properties:
+ *                     surface:
+ *                       type: string
+ *                     indoor:
+ *                       type: boolean
+ *                 net:
+ *                   type: number
+ *       404:
+ *         description: Game not found
+ *       500:
+ *         description: Internal server error
  */
