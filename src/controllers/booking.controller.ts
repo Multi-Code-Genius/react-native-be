@@ -13,19 +13,40 @@ export const createBooking = async (req: Request, res: Response) => {
     if (!game) throw new Error("Game not found");
 
     const bookingDate = new Date(date);
+    const requestedStart = new Date(startTime);
+    const requestedEnd = new Date(endTime);
 
-    const booking = await prisma.booking.create({
-      data: {
-        userId: userId,
+    const conflictingBookings = await prisma.booking.findFirst({
+      where: {
         gameId,
         date: bookingDate,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        AND: [
+          { startTime: { lt: requestedEnd } },
+          { endTime: { gt: requestedStart } },
+        ],
+      },
+    });
+
+    if (conflictingBookings) {
+      return res.status(409).json({
+        message: "Time slot already booked for this game on the selected date.",
+      });
+    }
+
+    // Proceed with booking
+    const booking = await prisma.booking.create({
+      data: {
+        userId,
+        gameId,
+        date: bookingDate,
+        startTime: requestedStart,
+        endTime: requestedEnd,
         nets,
         totalAmount,
         status: "PENDING",
       },
     });
+
     res.status(200).json({ message: "Booking Created", booking });
   } catch (error: any) {
     console.error(error);

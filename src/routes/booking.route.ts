@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express, { RequestHandler, Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   createBooking,
@@ -8,11 +8,23 @@ import {
 
 const bookingRoutes: Router = express.Router();
 
-bookingRoutes.post("/create", authMiddleware, createBooking);
+bookingRoutes.post(
+  "/create",
+  authMiddleware,
+  createBooking as unknown as RequestHandler
+);
 
-bookingRoutes.put("/status/:id", authMiddleware, updateBooking);
+bookingRoutes.put(
+  "/status/:id",
+  authMiddleware,
+  updateBooking as unknown as RequestHandler
+);
 
-bookingRoutes.post("/user/:userId", authMiddleware, getBookigById);
+bookingRoutes.post(
+  "/user/:userId",
+  authMiddleware,
+  getBookigById as unknown as RequestHandler
+);
 export default bookingRoutes;
 
 /**
