@@ -62,15 +62,15 @@ export const locationBaseGames = async (req: Request, res: Response) => {
 
   try {
     const games = await prisma.game.findMany({
-      //   where: {
-      //     location: {
-      //       path: ["city"],
-      //       equals: city,
-      //     },
-      //   },
+      where: {
+        location: {
+          path: ["city"],
+          equals: city,
+        },
+      },
     });
 
-    res.json({ success: true, games });
+    res.status(200).json({ success: true, games });
   } catch (err) {
     console.error(err);
     res
