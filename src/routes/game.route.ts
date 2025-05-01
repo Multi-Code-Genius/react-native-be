@@ -4,6 +4,7 @@ import {
   allGames,
   createGame,
   getGameByid,
+  getGameByidWithDate,
   locationBaseGames,
 } from "../controllers/game.controller";
 
@@ -16,6 +17,12 @@ gameRoutes.get(
   "/id/:gameId",
   authMiddleware,
   getGameByid as unknown as RequestHandler
+);
+
+gameRoutes.get(
+  "/gameid/:id/:date",
+  authMiddleware,
+  getGameByidWithDate as unknown as RequestHandler
 );
 
 export default gameRoutes;

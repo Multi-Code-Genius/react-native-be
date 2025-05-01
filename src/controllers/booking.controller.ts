@@ -1,10 +1,33 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 
+// import moment from "moment";
+
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId ?? "";
     const { startTime, endTime, nets, gameId, totalAmount, date } = req.body;
+
+    // Convert the human-readable time to proper Date objects in IST
+    const convertToIST = (timeStr: string, date: string) => {
+      // Convert "10am" to a proper Date object
+      const [time, meridian] = timeStr.toLowerCase().split(/(am|pm)/);
+      let hour = parseInt(time.trim());
+      if (meridian === "pm" && hour !== 12) {
+        hour += 12; // Convert PM times to 24-hour format
+      } else if (meridian === "am" && hour === 12) {
+        hour = 0; // Convert 12am to midnight (00:00)
+      }
+
+      const dateTimeString = `${date}T${String(hour).padStart(
+        2,
+        "0"
+      )}:00:00+05:30`; // Adding IST offset
+      return new Date(dateTimeString);
+    };
+
+    const requestedStart = convertToIST(startTime, date);
+    const requestedEnd = convertToIST(endTime, date);
 
     const game = await prisma.game.findUnique({
       where: { id: gameId },
@@ -12,9 +35,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
     if (!game) throw new Error("Game not found");
 
-    const bookingDate = new Date(date);
-    const requestedStart = new Date(startTime);
-    const requestedEnd = new Date(endTime);
+    const bookingDate = new Date(date); // Assuming you want to store the date as it is
 
     const conflictingBookings = await prisma.booking.findFirst({
       where: {
@@ -33,7 +54,6 @@ export const createBooking = async (req: Request, res: Response) => {
       });
     }
 
-    // Proceed with booking
     const booking = await prisma.booking.create({
       data: {
         userId,
