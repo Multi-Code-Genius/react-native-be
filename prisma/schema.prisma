@@ -8,6 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  user
+  admin
+}
+
 model User {
   id               String         @id @default(uuid())
   email            String         @unique
@@ -22,29 +27,35 @@ model User {
   resetToken       String?
   resetTokenExpiry DateTime?
   location         Json?
+  fcmToken         String?
+  isOnline         Boolean        @default(false)
+  lastSeen         DateTime?
+
+
+  otp              String?    // OTP code
+  otpExpiry        DateTime?  // OTP expiration time
+
+  role             UserRole?       @default(user) // ✅ new field
+
+  // Relations
   comments         Comment[]
   likes            Like[]
   posts            Post[]
   RejectedRoom     RejectedRoom[]
   RoomUser         RoomUser[]
   videos           Video[]
-
-  fcmToken String?
-  isOnline Boolean   @default(false)
-  lastSeen DateTime?
-
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
+  friends          Friend[]        @relation("UserFriend")
+  friendOf         Friend[]        @relation("FriendUser")
+  messagesSent     Message[]       @relation("SenderMessages")
+  messagesReceived Message[]       @relation("ReceiverMessages")
+  bookings         Booking[]
+  payments         Payment[]
 
-  friends  Friend[] @relation("UserFriend")
-  friendOf Friend[] @relation("FriendUser")
-
-  messagesSent     Message[] @relation("SenderMessages")
-  messagesReceived Message[] @relation("ReceiverMessages")
-
-  bookings Booking[]
-  payments Payment[]
+  games            Game[]          @relation("CreatedGames") // ✅ new relation
 }
+
 
 model Video {
   id          String    @id @default(uuid())
@@ -184,18 +195,22 @@ model Game {
   hourlyPrice Float
   capacity    Int
 
-  location    Json        // changed from String to Json
+  location    Json
   address     String
-
-  gameInfo    Json?       // new JSON column
-  net         Float?      // new Float column
+  gameInfo    Json?
+  net         Float?
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
+  createdBy   User?        @relation("CreatedGames", fields: [createdById], references: [id])
+  createdById String?
+
+
   timeSlots   TimeSlot[]
   bookings    Booking[]
 }
+
 
 
 

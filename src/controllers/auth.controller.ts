@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserData } from "../types/user";
 import crypto from "crypto";
-import { transporter } from "../utils/sendEmail";
+import { sendOtpEmail, transporter } from "../utils/sendEmail";
 import {
   EMAIL_USER,
   SECRET_KEY,
@@ -12,6 +12,7 @@ import {
   GOOGLE_CLIENT_ID,
 } from "../config/env";
 import { OAuth2Client } from "google-auth-library";
+import { generateOtp } from "../utils/generateOtp";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 export const register = async (req: Request, res: Response) => {
@@ -222,6 +223,75 @@ export const googleLogin = async (req: Request, res: Response) => {
     );
 
     res.status(200).json({ message: "User successfully Signup", token });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Login failed");
+  }
+};
+
+export const sendOtp = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "email is required" });
+
+    const otp = generateOtp();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { email, otp, otpExpiry },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email },
+        data: { otp, otpExpiry },
+      });
+    }
+
+    await sendOtpEmail(email, otp);
+
+    return res.json({ message: "OTP sent successfully" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Login failed");
+  }
+};
+
+export const verifyOtp = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.otp || !user.otpExpiry)
+      return res.status(400).json({ error: "OTP not found or expired" });
+
+    if (user.otp !== otp) return res.status(401).json({ error: "Invalid OTP" });
+
+    if (user.otpExpiry < new Date())
+      return res.status(401).json({ error: "OTP expired" });
+
+    await prisma.user.update({
+      where: { email },
+      data: { otp: null, otpExpiry: null },
+    });
+
+    if (!SECRET_KEY) {
+      console.error("JWT_SECRET is not set in the environment variables");
+      res.status(500).json({ message: "Internal server error" });
+      return;
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, name: user?.name, email: user.email },
+      SECRET_KEY,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return res.status(200).json({ message: "Login successful", token });
   } catch (err) {
     console.error(err);
     return res.status(500).send("Login failed");

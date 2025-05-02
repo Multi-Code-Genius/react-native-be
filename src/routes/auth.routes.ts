@@ -3,7 +3,9 @@ import {
   register,
   login,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
+  sendOtp,
+  verifyOtp,
 } from "../controllers/auth.controller";
 
 const router = express.Router();
@@ -15,6 +17,9 @@ router.post(
   requestPasswordReset as unknown as RequestHandler
 );
 router.post("/new-password", resetPassword as unknown as RequestHandler);
+
+router.post("/send-otp", sendOtp as unknown as RequestHandler);
+router.post("/verify-otp", verifyOtp as unknown as RequestHandler);
 
 export default router;
 
