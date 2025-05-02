@@ -2,22 +2,21 @@ import nodemailer from "nodemailer";
 import { EMAIL_USER, EMAIL_PASS } from "../config/env";
 
 export const transporter = nodemailer.createTransport({
-  service: "Gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
   },
 });
+
 export async function sendOtpEmail(email: string, otp: string) {
   await transporter.sendMail({
-    from: "Jay <no-reply@gamebooking.com>",
+    from: `Jay <${EMAIL_USER}>`,
     to: email,
     subject: "Your One-Time Password (OTP) for Login",
-    headers: {
-      "X-Priority": "1 (Highest)",
-      "X-MSMail-Priority": "High",
-      Importance: "High",
-    },
+    text: `Your OTP is: ${otp}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <h2 style="color: #2c3e50;">🔐 Your Login OTP</h2>
@@ -32,5 +31,10 @@ export async function sendOtpEmail(email: string, otp: string) {
         <p style="color: #555;">Thank you,<br/>Team MCG</p>
       </div>
     `,
+    headers: {
+      "X-Priority": "1 (Highest)",
+      "X-MSMail-Priority": "High",
+      Importance: "High",
+    },
   });
 }
