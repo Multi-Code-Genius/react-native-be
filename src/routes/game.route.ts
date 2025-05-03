@@ -1,12 +1,13 @@
 import express, { RequestHandler, Router } from "express";
-import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   allGames,
   createGame,
+  gameByAdmin,
   getGameByid,
   getGameByidWithDate,
   locationBaseGames,
 } from "../controllers/game.controller";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 const gameRoutes: Router = express.Router();
 
@@ -23,6 +24,12 @@ gameRoutes.get(
   "/gameid/:id/:date",
   authMiddleware,
   getGameByidWithDate as unknown as RequestHandler
+);
+
+gameRoutes.get(
+  "/all",
+  authMiddleware,
+  gameByAdmin as unknown as RequestHandler
 );
 
 export default gameRoutes;
@@ -199,6 +206,31 @@ export default gameRoutes;
  *                   type: number
  *       404:
  *         description: Game not found
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/game/all:
+ *   get:
+ *     summary: Get all games
+ *     description: Returns a list of all games in the database. Requires Bearer token authentication.
+ *     tags:
+ *       - Game
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of games
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Game'
+ *       401:
+ *         description: Unauthorized - missing or invalid token
  *       500:
  *         description: Internal server error
  */

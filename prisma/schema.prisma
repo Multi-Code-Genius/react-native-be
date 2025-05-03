@@ -35,7 +35,7 @@ model User {
   otp              String?    // OTP code
   otpExpiry        DateTime?  // OTP expiration time
 
-  role             UserRole?       @default(user) // ✅ new field
+  role             UserRole?       @default(user) 
 
   // Relations
   comments         Comment[]
@@ -53,7 +53,7 @@ model User {
   bookings         Booking[]
   payments         Payment[]
 
-  games            Game[]          @relation("CreatedGames") // ✅ new relation
+  games            Game[]          @relation("CreatedGames") 
 }
 
 
@@ -204,7 +204,7 @@ model Game {
   updatedAt   DateTime    @updatedAt
 
   createdBy   User?        @relation("CreatedGames", fields: [createdById], references: [id])
-  createdById String?
+  createdById String
 
 
   timeSlots   TimeSlot[]

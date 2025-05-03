@@ -16,6 +16,8 @@ export const createGame = async (req: Request, res: Response) => {
   } = req.body;
 
   try {
+    const adminId = req.user?.userId;
+
     const game = await prisma.game.create({
       data: {
         name,
@@ -27,6 +29,7 @@ export const createGame = async (req: Request, res: Response) => {
         address,
         gameInfo,
         net,
+        createdById: adminId,
       },
     });
 
@@ -151,10 +154,42 @@ export const getGameByidWithDate = async (req: Request, res: Response) => {
     }
 
     res.status(200).json({ message: "Games Fetched", game });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
     res
       .status(500)
-      .json({ success: false, error: "Failed to fetch game by Id" });
+      .json({ message: err.message || "Failed to fetch game by Id" });
+  }
+};
+
+export const gameByAdmin = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId as string;
+
+    const games = await prisma.game.findMany({
+      where: {
+        createdById: userId,
+      },
+      include: {
+        bookings: true,
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            mobileNumber: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      message: "Game Data Fetched",
+      games,
+    });
+  } catch (err: any) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ message: err.message || "Failed to fetch game by Id" });
   }
 };
