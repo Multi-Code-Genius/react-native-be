@@ -231,7 +231,7 @@ export const googleLogin = async (req: Request, res: Response) => {
 
 export const sendOtp = async (req: Request, res: Response) => {
   try {
-    const { email } = req.body;
+    const { email, role } = req.body;
     if (!email) return res.status(400).json({ error: "email is required" });
 
     const otp = generateOtp();
@@ -241,7 +241,7 @@ export const sendOtp = async (req: Request, res: Response) => {
 
     if (!user) {
       user = await prisma.user.create({
-        data: { email, otp, otpExpiry },
+        data: { email, otp, otpExpiry, role },
       });
     } else {
       await prisma.user.update({
