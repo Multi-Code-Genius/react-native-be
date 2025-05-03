@@ -4,7 +4,7 @@ import { EMAIL_USER, EMAIL_PASS } from "../config/env";
 export const transporter = nodemailer.createTransport({
   host: "smtp.office365.com",
   port: 587,
-  secure: true,
+  secure: false,
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
