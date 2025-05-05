@@ -116,6 +116,15 @@ export const getBookingByGameId = async (req: Request, res: Response) => {
         gameId: id,
         date: isoDate,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+          },
+        },
+      },
     });
 
     return res.status(200).json({ message: "Fetch Booking Data", booking });

@@ -1,4 +1,3 @@
-// utils/sendSmsOtp.js
 const axios = require("axios");
 
 const GATEWAY_URL = "http://192.168.1.11:8082/v1/sms/send";
