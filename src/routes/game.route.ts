@@ -8,10 +8,18 @@ import {
   locationBaseGames,
 } from "../controllers/game.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
+import { handleUploadGame, uploadGame } from "../helper/upload";
 
 const gameRoutes: Router = express.Router();
 
-gameRoutes.post("/create", authMiddleware, createGame);
+gameRoutes.post(
+  "/create",
+  uploadGame.array("game"),
+  handleUploadGame,
+  authMiddleware,
+  createGame
+);
+
 gameRoutes.get("/", authMiddleware, allGames);
 gameRoutes.get("/location/:city", authMiddleware, locationBaseGames);
 gameRoutes.get(
@@ -38,8 +46,8 @@ export default gameRoutes;
  * @swagger
  * /api/game/create:
  *   post:
- *     summary: Create a new game
- *     description: Creates a new game/turf with location, pricing, and other details.
+ *     summary: Create a new game/turf
+ *     description: Creates a new game with name, category, description, pricing, location, game info, and image uploads.
  *     tags:
  *       - Game
  *     security:
@@ -47,57 +55,52 @@ export default gameRoutes;
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
- *                 example: City Turf
+ *                 example: postman cricket
  *               category:
  *                 type: string
- *                 example: Football
+ *                 example: football
  *               description:
  *                 type: string
- *                 example: this is a test dummy description for testing purpose xyz
+ *                 example: football Cricket description this is test description
  *               hourlyPrice:
- *                 type: number
- *                 format: float
- *                 example: 1200
+ *                 type: string
+ *                 example: "45000"
  *               capacity:
- *                 type: integer
- *                 example: 10
- *               location:
- *                 type: object
- *                 properties:
- *                   city:
- *                     type: string
- *                     example: Mumbai
- *                   area:
- *                     type: string
- *                     example: Andheri
+ *                 type: string
+ *                 example: "45"
+ *               location[city]:
+ *                 type: string
+ *                 example: Surat
+ *               location[area]:
+ *                 type: string
+ *                 example: vesu
  *               address:
  *                 type: string
- *                 example: XYZ Lane, Andheri West
- *               images:
+ *                 example: samarth bunglows, someshwara enclave
+ *               gameInfo[surface]:
+ *                 type: string
+ *                 example: natural Grass
+ *               gameInfo[indoor]:
+ *                 type: string
+ *                 example: false
+ *               gameInfo[equipment provided]:
+ *                 type: string
+ *                 example: true
+ *               net:
+ *                 type: string
+ *                 example: "1"
+ *               game:
  *                 type: array
  *                 items:
  *                   type: string
- *                 example:
- *                   - https://example.com/image1.jpg
- *                   - https://example.com/image2.jpg
- *               gameInfo:
- *                 type: object
- *                 properties:
- *                   surface:
- *                     type: string
- *                     example: Artificial Grass
- *                   indoor:
- *                     type: boolean
- *                     example: false
- *               net:
- *                 type: number
- *                 example: 2
+ *                   format: binary
+ *                 description: Multiple image files
  *     responses:
  *       200:
  *         description: Game created successfully
@@ -106,15 +109,18 @@ export default gameRoutes;
  *             schema:
  *               type: object
  *               properties:
- *                 message:
- *                   type: string
- *                   example: Game Created
- *                 game:
- *                   $ref: '#/components/schemas/Game'
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   description: Created game object
  *       400:
- *         description: Bad Request
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
  *       500:
- *         description: Internal Server Error
+ *         description: Internal server error
  */
 
 /**

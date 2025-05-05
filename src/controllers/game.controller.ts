@@ -2,7 +2,17 @@ import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 import { startOfDay, endOfDay } from "date-fns";
 
-export const createGame = async (req: Request, res: Response) => {
+interface UploadedFile {
+  url: string;
+  fileId: string;
+  original: any;
+}
+
+interface CustomRequest extends Request {
+  uploadedFiles?: UploadedFile[];
+}
+
+export const createGame = async (req: CustomRequest, res: Response) => {
   const {
     name,
     location,
@@ -18,17 +28,21 @@ export const createGame = async (req: Request, res: Response) => {
   try {
     const adminId = req.user?.userId;
 
+    const uploadedFiles = req.uploadedFiles || [];
+    const imagePaths = uploadedFiles.map((file: any) => file.url);
+
     const game = await prisma.game.create({
       data: {
         name,
         location,
-        hourlyPrice,
-        capacity,
+        hourlyPrice: parseFloat(hourlyPrice),
+        capacity: parseFloat(capacity),
         description,
         category,
         address,
         gameInfo,
-        net,
+        net: net ? parseFloat(net) : null,
+        images: imagePaths,
         createdById: adminId,
       },
     });
