@@ -1,28 +1,24 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 
-// import moment from "moment";
-
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId ?? "";
     const { startTime, endTime, nets, gameId, totalAmount, date } = req.body;
 
-    // Convert the human-readable time to proper Date objects in IST
     const convertToIST = (timeStr: string, date: string) => {
-      // Convert "10am" to a proper Date object
       const [time, meridian] = timeStr.toLowerCase().split(/(am|pm)/);
       let hour = parseInt(time.trim());
       if (meridian === "pm" && hour !== 12) {
-        hour += 12; // Convert PM times to 24-hour format
+        hour += 12;
       } else if (meridian === "am" && hour === 12) {
-        hour = 0; // Convert 12am to midnight (00:00)
+        hour = 0;
       }
 
       const dateTimeString = `${date}T${String(hour).padStart(
         2,
         "0"
-      )}:00:00+05:30`; // Adding IST offset
+      )}:00:00+05:30`;
       return new Date(dateTimeString);
     };
 
@@ -35,7 +31,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
     if (!game) throw new Error("Game not found");
 
-    const bookingDate = new Date(date); // Assuming you want to store the date as it is
+    const bookingDate = new Date(date);
 
     const conflictingBookings = await prisma.booking.findFirst({
       where: {
@@ -101,5 +97,29 @@ export const getBookigById = async (req: Request, res: Response) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: "Failed to get bookings" });
+  }
+};
+
+export const getBookingByGameId = async (req: Request, res: Response) => {
+  try {
+    const { id, date } = req.params;
+
+    const [day, month, year] = date.split("-");
+    const isoDate = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+
+    if (isNaN(isoDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    const booking = await prisma.booking.findMany({
+      where: {
+        gameId: id,
+        date: isoDate,
+      },
+    });
+
+    return res.status(200).json({ message: "Fetch Booking Data", booking });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message || "Failed to get bookings" });
   }
 };
