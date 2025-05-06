@@ -255,10 +255,12 @@ export const sendOtp = async (req: Request, res: Response) => {
 
     await sendOtpEmail(email, otp);
 
-    return res.json({ message: "OTP sent successfully" });
-  } catch (err) {
+    return res.json({
+      message: "OTP sent successfully to your email. Please check your inbox.",
+    });
+  } catch (err: any) {
     console.error(err);
-    return res.status(500).send("Login failed");
+    return res.status(500).json({ message: err.message || "Login failed" });
   }
 };
 
