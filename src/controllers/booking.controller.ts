@@ -25,21 +25,6 @@ export const createBooking = async (req: Request, res: Response) => {
 
     if (!game) throw new Error("Game not found");
 
-    const user = await prisma.user.findUnique({
-      where: {
-        mobileNumber: number,
-      },
-    });
-
-    if (!user) {
-      await prisma.user.create({
-        data: {
-          mobileNumber: number,
-          name,
-        },
-      });
-    }
-
     const conflictingBookings = await prisma.booking.findFirst({
       where: {
         gameId,
@@ -54,6 +39,21 @@ export const createBooking = async (req: Request, res: Response) => {
     if (conflictingBookings) {
       return res.status(409).json({
         message: "Time slot already booked for this game on the selected date.",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        mobileNumber: number,
+      },
+    });
+
+    if (!user) {
+      await prisma.user.create({
+        data: {
+          mobileNumber: number,
+          name,
+        },
       });
     }
 
