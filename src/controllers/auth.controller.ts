@@ -14,10 +14,11 @@ import {
 import { OAuth2Client } from "google-auth-library";
 import { generateOtp } from "../utils/generateOtp";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+import { v4 as uuidv4 } from "uuid";
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password }: UserData = req.body;
+    const { name, email, password, number }: UserData = req.body;
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -35,6 +36,7 @@ export const register = async (req: Request, res: Response) => {
         email,
         password: hashedPassword ?? "",
         ...(name && { name }),
+        mobileNumber: number,
       },
     });
 
@@ -211,6 +213,7 @@ export const googleLogin = async (req: Request, res: Response) => {
         email: email ?? "",
         profile_pic: picture ?? "",
         ...(name && { name }),
+        mobileNumber: "",
       },
     });
 
@@ -241,7 +244,7 @@ export const sendOtp = async (req: Request, res: Response) => {
 
     if (!user) {
       user = await prisma.user.create({
-        data: { email, otp, otpExpiry, role },
+        data: { email, otp, otpExpiry, role, mobileNumber: uuidv4() },
       });
     } else {
       await prisma.user.update({
@@ -271,7 +274,7 @@ export const reSendOtp = async (req: Request, res: Response) => {
 
     if (!user) {
       user = await prisma.user.create({
-        data: { email, otp, otpExpiry, role: "admin" },
+        data: { email, otp, otpExpiry, role: "admin", mobileNumber: uuidv4() },
       });
     } else {
       await prisma.user.update({

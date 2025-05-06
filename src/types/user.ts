@@ -10,6 +10,7 @@ export type UserData = {
   location?: string;
   status?: string;
   dob: Date;
+  number: string;
 };
 
 export interface CustomRequest extends Request {
