@@ -1,29 +1,23 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
+import { convertToIST } from "../helper/helper";
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId ?? "";
-    const { startTime, endTime, nets, gameId, totalAmount, date } = req.body;
-
-    const convertToIST = (timeStr: string, date: string) => {
-      const [time, meridian] = timeStr.toLowerCase().split(/(am|pm)/);
-      let hour = parseInt(time.trim());
-      if (meridian === "pm" && hour !== 12) {
-        hour += 12;
-      } else if (meridian === "am" && hour === 12) {
-        hour = 0;
-      }
-
-      const dateTimeString = `${date}T${String(hour).padStart(
-        2,
-        "0"
-      )}:00:00+05:30`;
-      return new Date(dateTimeString);
-    };
+    const {
+      startTime,
+      endTime,
+      nets,
+      gameId,
+      totalAmount,
+      date,
+      number,
+      name,
+    } = req.body;
 
     const requestedStart = convertToIST(startTime, date);
     const requestedEnd = convertToIST(endTime, date);
+    const bookingDate = new Date(date);
 
     const game = await prisma.game.findUnique({
       where: { id: gameId },
@@ -31,7 +25,20 @@ export const createBooking = async (req: Request, res: Response) => {
 
     if (!game) throw new Error("Game not found");
 
-    const bookingDate = new Date(date);
+    const user = await prisma.user.findUnique({
+      where: {
+        mobileNumber: number,
+      },
+    });
+
+    if (!user) {
+      await prisma.user.create({
+        data: {
+          mobileNumber: number,
+          name,
+        },
+      });
+    }
 
     const conflictingBookings = await prisma.booking.findFirst({
       where: {
@@ -52,7 +59,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
     const booking = await prisma.booking.create({
       data: {
-        userId,
+        userMobile: number,
         gameId,
         date: bookingDate,
         startTime: requestedStart,

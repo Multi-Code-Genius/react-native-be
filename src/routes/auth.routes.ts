@@ -20,7 +20,7 @@ router.post(
 router.post("/new-password", resetPassword as unknown as RequestHandler);
 
 router.post("/send-otp", sendOtp as unknown as RequestHandler);
-router.post("/resend-otp", reSendOtp as unknown as RequestHandler);
+// router.post("/resend-otp", reSendOtp as unknown as RequestHandler);
 router.post("/verify-otp", verifyOtp as unknown as RequestHandler);
 
 export default router;
