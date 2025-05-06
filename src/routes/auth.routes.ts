@@ -6,6 +6,7 @@ import {
   resetPassword,
   sendOtp,
   verifyOtp,
+  reSendOtp,
 } from "../controllers/auth.controller";
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.post(
 router.post("/new-password", resetPassword as unknown as RequestHandler);
 
 router.post("/send-otp", sendOtp as unknown as RequestHandler);
+router.post("/resend-otp", reSendOtp as unknown as RequestHandler);
 router.post("/verify-otp", verifyOtp as unknown as RequestHandler);
 
 export default router;
@@ -196,6 +198,44 @@ export default router;
  * /api/auth/send-otp:
  *   post:
  *     summary: Send OTP to Email
+ *     description: Sends a one-time password (OTP) to the user's email for login or verification.
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: jayrajshakha@outlook.com
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: OTP sent to email
+ *       400:
+ *         description: Invalid input or email not provided
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/auth/resend-otp:
+ *   post:
+ *     summary: ReSend OTP to Email
  *     description: Sends a one-time password (OTP) to the user's email for login or verification.
  *     tags:
  *       - Authentication

@@ -259,6 +259,36 @@ export const sendOtp = async (req: Request, res: Response) => {
   }
 };
 
+export const reSendOtp = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "email is required" });
+
+    const otp = generateOtp();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { email, otp, otpExpiry, role: "admin" },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email },
+        data: { otp, otpExpiry },
+      });
+    }
+
+    await sendOtpEmail(email, otp);
+
+    return res.json({ message: "OTP sent successfully" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Login failed");
+  }
+};
+
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
     const { email, otp } = req.body;
