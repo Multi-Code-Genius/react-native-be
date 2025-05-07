@@ -3,12 +3,12 @@ import { prisma } from "../utils/prisma";
 import { UserData } from "../types/user";
 
 // Custom interface to extend Express Request type
-interface CustomRequest extends Request {
-  file?: Express.Multer.File;
-  uploadedFile?: {
-    url: string;
-  };
-}
+// interface CustomRequest extends Request {
+//   file?: Express.Multer.File;
+//   uploadedFile?: {
+//     url: string;
+//   };
+// }
 export const getProfile = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -259,6 +259,16 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
+interface UploadedFile {
+  url: string;
+  fileId: string;
+  original: any;
+}
+
+interface CustomRequest extends Request {
+  uploadedFiles?: UploadedFile[];
+}
+
 export const uploadProfilePicture = async (
   req: CustomRequest,
   res: Response
@@ -270,13 +280,16 @@ export const uploadProfilePicture = async (
         .json({ success: false, message: "No file uploaded" });
     }
 
-    const imageUrl = req.uploadedFile?.url || req.file?.path;
+    // const imageUrl = req.uploadedFile?.url || req.file?.path;
+
+    const uploadedFiles = req.uploadedFiles || [];
+    const imagePaths = uploadedFiles.map((file: any) => file.url);
 
     const userId = req.params.userId;
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { profile_pic: imageUrl },
+      data: { profile_pic: imagePaths[0] },
     } as any);
 
     res
