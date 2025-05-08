@@ -4,20 +4,16 @@ import { convertToIST } from "../helper/helper";
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
-    const {
-      startTime,
-      endTime,
-      nets,
-      gameId,
-      totalAmount,
-      date,
-      number,
-      name,
-    } = req.body;
+    const { startTime, endTime, nets, gameId, date, number, name } = req.body;
 
     const requestedStart = convertToIST(startTime, date);
     const requestedEnd = convertToIST(endTime, date);
     const bookingDate = new Date(date);
+
+    const totalAmount = parseFloat(req.body.totalAmount);
+    if (isNaN(totalAmount)) {
+      throw new Error("Invalid totalAmount");
+    }
 
     const game = await prisma.game.findUnique({
       where: { id: gameId },
