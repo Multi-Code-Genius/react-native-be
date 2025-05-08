@@ -6,6 +6,7 @@ import {
   getGameByid,
   getGameByidWithDate,
   locationBaseGames,
+  updateGame,
 } from "../controllers/game.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { handleUploadGame, uploadGame } from "../helper/upload";
@@ -18,6 +19,14 @@ gameRoutes.post(
   handleUploadGame,
   authMiddleware,
   createGame
+);
+
+gameRoutes.patch(
+  "/update-venue/:gameId",
+  uploadGame.array("game"),
+  handleUploadGame,
+  authMiddleware,
+  updateGame as unknown as RequestHandler
 );
 
 gameRoutes.get("/", authMiddleware, allGames);
@@ -239,4 +248,110 @@ export default gameRoutes;
  *         description: Unauthorized - missing or invalid token
  *       500:
  *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/game/update-venue/{gameId}:
+ *   patch:
+ *     summary: Update an existing game venue
+ *     description: Updates the details of an existing game venue including name, category, description, pricing, location, game info, and optionally uploading images.
+ *     tags:
+ *       - Game
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: gameId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the game to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Updated Game Name"
+ *               category:
+ *                 type: string
+ *                 example: "football"
+ *               description:
+ *                 type: string
+ *                 example: "Game description goes here"
+ *               hourlyPrice:
+ *                 type: string
+ *                 example: "45000"
+ *               capacity:
+ *                 type: string
+ *                 example: "45"
+ *               address:
+ *                 type: string
+ *                 example: "samarth bunglows, someshwara enclave"
+ *               net:
+ *                 type: string
+ *                 example: "1"
+ *               location[city]:
+ *                 type: string
+ *                 example: "Surat"
+ *               location[area]:
+ *                 type: string
+ *                 example: "vesu"
+ *               gameInfo[surface]:
+ *                 type: string
+ *                 example: "natural Grass"
+ *               gameInfo[indoor]:
+ *                 type: string
+ *                 example: "false"
+ *               gameInfo[outdoor]:
+ *                 type: string
+ *                 example: "false"
+ *               gameInfo[roof]:
+ *                 type: string
+ *                 example: "true"
+ *               gameInfo[equipment provided]:
+ *                 type: string
+ *                 example: "true"
+ *               game:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Optional image files to upload
+ *     responses:
+ *       200:
+ *         description: Game updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Game updated successfully
+ *                 game:
+ *                   $ref: '#/components/schemas/Game'
+ *       404:
+ *         description: Game not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Game not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
  */

@@ -41,6 +41,8 @@ app.use(helmet());
 app.use(morgan("dev"));
 
 setupSwagger(app);
+
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);

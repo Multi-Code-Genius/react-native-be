@@ -8,7 +8,7 @@ import {
   pingOnline,
   searchUser,
   updateLocation,
-  uploadProfilePicture
+  uploadProfilePicture,
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { handleUploadProfile, uploadProfile } from "../helper/upload";

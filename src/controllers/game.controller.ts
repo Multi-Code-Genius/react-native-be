@@ -28,7 +28,7 @@ export const createGame = async (req: CustomRequest, res: Response) => {
   try {
     const adminId = req.user?.userId;
 
-    const uploadedFiles = req.uploadedFiles || [];
+    const uploadedFiles = req?.uploadedFiles || [];
     const imagePaths = uploadedFiles.map((file: any) => file.url);
 
     const game = await prisma.game.create({
@@ -106,15 +106,15 @@ export const getGameByid = async (req: Request, res: Response) => {
         id: gameId,
       },
       include: {
-        bookings: {
-          select: {
-            date: true,
-            endTime: true,
-            startTime: true,
-            nets: true,
-            status: true,
-          },
-        },
+        // bookings: {
+        //   select: {
+        //     date: true,
+        //     endTime: true,
+        //     startTime: true,
+        //     nets: true,
+        //     status: true,
+        //   },
+        // },
       },
     });
 
@@ -205,5 +205,97 @@ export const gameByAdmin = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: err.message || "Failed to fetch game by Id" });
+  }
+};
+
+export const updateGame = async (req: CustomRequest, res: Response) => {
+  try {
+    const gameId = req.params.gameId;
+
+    const {
+      name,
+      category,
+      description,
+      hourlyPrice,
+      capacity,
+      location,
+      address,
+      gameInfo,
+      net,
+    } = req.body;
+
+    const uploadedFiles = req?.uploadedFiles || [];
+    const imagePaths = uploadedFiles.map((file: any) => file.url);
+
+    const existinGame = await prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!existinGame) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (location && typeof location === "object") {
+      const existingLocation =
+        typeof existinGame.location === "object" &&
+        existinGame.location !== null
+          ? existinGame.location
+          : {};
+
+      updateData.location = {
+        ...existingLocation,
+        ...location,
+      };
+    }
+
+    if (category) updateData.category = category;
+    if (description) updateData.description = description;
+    if (hourlyPrice) updateData.hourlyPrice = parseFloat(hourlyPrice);
+    if (capacity) updateData.capacity = parseInt(capacity, 10);
+    if (address) updateData.address = address;
+    if (net) updateData.net = parseFloat(net);
+
+    if (gameInfo && typeof gameInfo === "object") {
+      const existingGameInfo =
+        typeof existinGame.gameInfo === "object" &&
+        existinGame.gameInfo !== null
+          ? existinGame.gameInfo
+          : {};
+
+      const { indoor, outdoor, roof, ...restGameInfo } = gameInfo;
+
+      const mergedGameInfo = {
+        ...existingGameInfo,
+        ...restGameInfo,
+        indoor: false,
+        outdoor: false,
+        roof: false,
+      };
+
+      if (indoor) mergedGameInfo.indoor = true;
+      else if (outdoor) mergedGameInfo.outdoor = true;
+      else if (roof) mergedGameInfo.roof = true;
+
+      updateData.gameInfo = mergedGameInfo;
+    }
+
+    if (imagePaths.length > 0) {
+      updateData.images = imagePaths;
+    }
+
+    const updatedGame = await prisma.game.update({
+      where: { id: gameId },
+      data: updateData,
+    });
+
+    res
+      .status(200)
+      .json({ message: "Game updated successfully", game: updatedGame });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ message: err.message || "Failed to update game" });
   }
 };
