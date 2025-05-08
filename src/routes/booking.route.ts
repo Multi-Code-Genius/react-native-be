@@ -1,6 +1,7 @@
 import express, { RequestHandler, Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
+  cancelBooking,
   createBooking,
   getBookigById,
   getBookingByGameId,
@@ -31,6 +32,12 @@ bookingRoutes.get(
   "/game/:id/:date",
   authMiddleware,
   getBookingByGameId as unknown as RequestHandler
+);
+
+bookingRoutes.delete(
+  "/cancel/:bookingId",
+  authMiddleware,
+  cancelBooking as unknown as RequestHandler
 );
 
 export default bookingRoutes;
@@ -144,6 +151,41 @@ export default bookingRoutes;
  *         description: Invalid date format
  *       401:
  *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/booking/cancel/{id}:
+ *   delete:
+ *     summary: Cancel a booking by ID
+ *     tags:
+ *       - Bookings
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Unique identifier of the booking to cancel
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Booking cancelled successfully
+ *       401:
+ *         description: Unauthorized – JWT is missing or invalid
+ *       404:
+ *         description: Booking not found
  *       500:
  *         description: Internal server error
  */

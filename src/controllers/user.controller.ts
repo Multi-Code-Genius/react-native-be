@@ -2,13 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 import { UserData } from "../types/user";
 
-// Custom interface to extend Express Request type
-// interface CustomRequest extends Request {
-//   file?: Express.Multer.File;
-//   uploadedFile?: {
-//     url: string;
-//   };
-// }
 export const getProfile = async (req: Request, res: Response) => {
   try {
     if (!req.user) {

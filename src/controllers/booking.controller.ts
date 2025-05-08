@@ -139,3 +139,27 @@ export const getBookingByGameId = async (req: Request, res: Response) => {
     res.status(500).json({ message: err.message || "Failed to get bookings" });
   }
 };
+
+export const cancelBooking = async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!existingBooking) {
+      return res.status(404).json({ message: "Booking not found." });
+    }
+
+    await prisma.booking.delete({
+      where: { id: bookingId },
+    });
+
+    res.status(200).json({ message: "User Booking Cancel successfully." });
+  } catch (err: any) {
+    res
+      .status(500)
+      .json({ message: err.message || "Failed to Cancel bookings" });
+  }
+};
