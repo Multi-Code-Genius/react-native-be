@@ -1,12 +1,13 @@
-export const convertToIST = (timeStr: string, date: string) => {
-  const [time, meridian] = timeStr.toLowerCase().split(/(am|pm)/);
-  let hour = parseInt(time.trim());
-  if (meridian === "pm" && hour !== 12) {
-    hour += 12;
-  } else if (meridian === "am" && hour === 12) {
-    hour = 0;
-  }
+export function convertTo24Hour(time: string): string {
+  const match = time.match(/(\d+):(\d+)\s*(am|pm)/i);
 
-  const dateTimeString = `${date}T${String(hour).padStart(2, "0")}:00:00+05:30`;
-  return new Date(dateTimeString);
-};
+  if (!match) throw new Error("Invalid time format");
+
+  const [_, hour, minute, ampm] = match;
+  let h = parseInt(hour);
+
+  if (ampm.toLowerCase() === "pm" && h !== 12) h += 12;
+  if (ampm.toLowerCase() === "am" && h === 12) h = 0;
+
+  return `${String(h).padStart(2, "0")}:${minute}`;
+}

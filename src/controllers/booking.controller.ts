@@ -1,14 +1,20 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
-import { convertToIST } from "../helper/helper";
+import { convertTo24Hour } from "../helper/helper";
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const { startTime, endTime, nets, gameId, date, number, name } = req.body;
 
-    const requestedStart = convertToIST(startTime, date);
-    const requestedEnd = convertToIST(endTime, date);
     const bookingDate = new Date(date);
+
+    function istToUTC(time: string, date: string) {
+      const istDateTime = new Date(`${date}T${convertTo24Hour(time)}+05:30`);
+      return new Date(istDateTime.toISOString());
+    }
+
+    const requestedStart = istToUTC(startTime, date);
+    const requestedEnd = istToUTC(endTime, date);
 
     const totalAmount = parseFloat(req.body.totalAmount);
     if (isNaN(totalAmount)) {
@@ -63,6 +69,13 @@ export const createBooking = async (req: Request, res: Response) => {
         nets,
         totalAmount,
         status: "PENDING",
+      },
+      include: {
+        game: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
