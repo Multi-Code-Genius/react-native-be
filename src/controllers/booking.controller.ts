@@ -88,7 +88,7 @@ export const createBooking = async (req: Request, res: Response) => {
   }
 };
 
-export const updateBooking = async (req: Request, res: Response) => {
+export const updateBookingStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -97,9 +97,60 @@ export const updateBooking = async (req: Request, res: Response) => {
       where: { id },
       data: { status },
     });
-    res.json({ success: true, booking: updated });
+    res.json({
+      message: "Booking status updated Successfully",
+      booking: updated,
+    });
   } catch (err) {
     res.status(400).json({ success: false, error: "Failed to update status" });
+  }
+};
+
+export const updateBooking = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { startTime, endTime, nets, date, totalAmount } = req.body;
+
+    const dataToUpdate: any = {};
+
+    if (date) {
+      dataToUpdate.date = new Date(date);
+    }
+
+    function istToUTC(time: string, date: string) {
+      const istDateTime = new Date(`${date}T${convertTo24Hour(time)}+05:30`);
+      return new Date(istDateTime.toISOString());
+    }
+
+    if (startTime && date) {
+      dataToUpdate.startTime = istToUTC(startTime, date);
+    }
+
+    if (endTime && date) {
+      dataToUpdate.endTime = istToUTC(endTime, date);
+    }
+
+    if (nets !== undefined) {
+      dataToUpdate.nets = nets;
+    }
+
+    if (totalAmount !== undefined) {
+      const parsedAmount = parseFloat(totalAmount);
+      if (isNaN(parsedAmount)) {
+        throw new Error("Invalid totalAmount");
+      }
+      dataToUpdate.totalAmount = parsedAmount;
+    }
+
+    const updated = await prisma.booking.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+
+    res.json({ success: true, booking: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ success: false, error: "Failed to update booking" });
   }
 };
 

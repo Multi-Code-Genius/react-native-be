@@ -6,6 +6,7 @@ import {
   getBookigById,
   getBookingByGameId,
   updateBooking,
+  updateBookingStatus,
 } from "../controllers/booking.controller";
 
 const bookingRoutes: Router = express.Router();
@@ -16,10 +17,10 @@ bookingRoutes.post(
   createBooking as unknown as RequestHandler
 );
 
-bookingRoutes.put(
+bookingRoutes.patch(
   "/status/:id",
   authMiddleware,
-  updateBooking as unknown as RequestHandler
+  updateBookingStatus as unknown as RequestHandler
 );
 
 bookingRoutes.post(
@@ -38,6 +39,12 @@ bookingRoutes.delete(
   "/cancel/:bookingId",
   authMiddleware,
   cancelBooking as unknown as RequestHandler
+);
+
+bookingRoutes.patch(
+  "/update/:id",
+  authMiddleware,
+  updateBooking as unknown as RequestHandler
 );
 
 export default bookingRoutes;
@@ -161,7 +168,7 @@ export default bookingRoutes;
  *   delete:
  *     summary: Cancel a booking by ID
  *     tags:
- *       - Bookings
+ *       - Booking
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -188,4 +195,105 @@ export default bookingRoutes;
  *         description: Booking not found
  *       500:
  *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/booking/update/{id}:
+ *   patch:
+ *     summary: Update an existing booking
+ *     description: Updates only the provided fields of a booking by ID.
+ *     tags:
+ *       - Booking
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               startTime:
+ *                 type: string
+ *                 example: "08:30 AM"
+ *               endTime:
+ *                 type: string
+ *                 example: "09:30 AM"
+ *               nets:
+ *                 type: number
+ *                 example: 2
+ *               totalAmount:
+ *                 type: number
+ *                 example: 2500
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-05-19"
+ *     responses:
+ *       200:
+ *         description: Booking updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 booking:
+ *                   $ref: '#/components/schemas/Booking'
+ *       400:
+ *         description: Failed to update booking
+ */
+/**
+ * @swagger
+ * /api/booking/status/{id}:
+ *   patch:
+ *     summary: Update booking status
+ *     description: Updates the status of an existing booking by its ID.
+ *     tags:
+ *       - Booking
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the booking to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, CONFIRMED, CANCELLED]
+ *                 example: CONFIRMED
+ *     responses:
+ *       200:
+ *         description: Booking status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 booking:
+ *                   $ref: '#/components/schemas/Booking'
+ *       400:
+ *         description: Failed to update booking status
  */
