@@ -1,7 +1,9 @@
 import express, { RequestHandler, Router } from "express";
 import {
+  addImages,
   allGames,
   createGame,
+  deleteVenue,
   gameByAdmin,
   getGameByid,
   getGameByidWithDate,
@@ -47,6 +49,20 @@ gameRoutes.get(
   "/all",
   authMiddleware,
   gameByAdmin as unknown as RequestHandler
+);
+
+gameRoutes.post(
+  "/add-images/:gameId",
+  uploadGame.single("game"),
+  handleUploadGame,
+  authMiddleware,
+  addImages as unknown as RequestHandler
+);
+
+gameRoutes.delete(
+  "/delete-venue/:gameId",
+  authMiddleware,
+  deleteVenue as unknown as RequestHandler
 );
 
 export default gameRoutes;
@@ -354,4 +370,64 @@ export default gameRoutes;
  *               properties:
  *                 message:
  *                   type: string
+ */
+
+/**
+ * @swagger
+ * /api/game/delete-venue/{venueId}:
+ *   delete:
+ *     summary: Delete a venue
+ *     description: Deletes a venue by its unique ID. Authorization is required.
+ *     tags:
+ *       - Game
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: venueId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID of the venue to delete
+ *     responses:
+ *       200:
+ *         description: Venue deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Venue deleted successfully
+ *       400:
+ *         description: Invalid venue ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Invalid venue ID
+ *       401:
+ *         description: Unauthorized – No or invalid token provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Unauthorized
+ *       404:
+ *         description: Venue not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Venue not found
  */

@@ -28,7 +28,7 @@ export const createGame = async (req: CustomRequest, res: Response) => {
   try {
     const adminId = req.user?.userId;
 
-    const uploadedFiles = req?.uploadedFiles || [];
+    const uploadedFiles = req.uploadedFiles || [];
     const imagePaths = uploadedFiles.map((file: any) => file.url);
 
     const game = await prisma.game.create({
@@ -47,12 +47,38 @@ export const createGame = async (req: CustomRequest, res: Response) => {
       },
     });
 
-    res.status(200).json({ message: "Game Created", game });
+    res.status(200).json({ message: "Game Created" });
   } catch (err: any) {
     res.status(500).json({ message: err.message || "Failed to Create games" });
   }
 };
 
+export const addImages = async (req: CustomRequest, res: Response) => {
+  try {
+    const { gameId } = req.params;
+    const uploadedFiles = req.uploadedFiles || [];
+    const imagePaths = uploadedFiles.map((file: any) => file.url);
+
+    console.log(imagePaths);
+
+    const game = await prisma.game.findUnique({
+      where: { id: gameId },
+    });
+
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    const updatedGame = await prisma.game.update({
+      where: { id: gameId },
+      data: { images: { push: imagePaths } },
+    });
+
+    res.status(200).json({ message: "Images added", game: updatedGame });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message || "Failed to add images" });
+  }
+};
 export const allGames = async (req: Request, res: Response) => {
   try {
     const games = await prisma.game.findMany({
@@ -297,5 +323,29 @@ export const updateGame = async (req: CustomRequest, res: Response) => {
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ message: err.message || "Failed to update game" });
+  }
+};
+
+export const deleteVenue = async (req: Request, res: Response) => {
+  try {
+    const { gameId } = req.params;
+    const userId = req.user?.userId as string;
+
+    const game = await prisma.game.findUnique({
+      where: { id: gameId, createdById: userId },
+    });
+
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    await prisma.game.delete({
+      where: { id: gameId },
+    });
+
+    res.status(200).json({ message: "Game deleted successfully" });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ message: err.message || "Failed to delete game" });
   }
 };
