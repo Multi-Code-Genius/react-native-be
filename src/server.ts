@@ -23,6 +23,7 @@ import videoRoutes from "./routes/video.route";
 import { initSocket } from "./socket";
 import "./types/express";
 import { setupSwagger } from "./utils/swagger";
+import dashboardRouter from "./routes/dashboard.routes";
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use("/api/notification", notificationRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/game", gameRoutes);
+app.use("/api/dashboard", dashboardRouter);
 
 cron.schedule("* * * * *", () => {
   markInactiveUsersOffline();

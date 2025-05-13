@@ -47,7 +47,7 @@ export const createGame = async (req: CustomRequest, res: Response) => {
       },
     });
 
-    res.status(200).json({ message: "Game Created" });
+    res.status(200).json({ message: "Game Created", game });
   } catch (err: any) {
     res.status(500).json({ message: err.message || "Failed to Create games" });
   }
