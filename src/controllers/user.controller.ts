@@ -18,6 +18,12 @@ export const getProfile = async (req: Request, res: Response) => {
             read: false,
           },
         },
+        games: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         comments: {
           include: {
             user: {
