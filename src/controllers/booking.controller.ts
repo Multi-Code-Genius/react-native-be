@@ -133,7 +133,6 @@ export const updateBooking = async (req: Request, res: Response) => {
     if (startTime && date) {
       dataToUpdate.startTime = istToUTC(startTime, date);
     }
-
     if (endTime && date) {
       dataToUpdate.endTime = istToUTC(endTime, date);
     }
@@ -150,21 +149,29 @@ export const updateBooking = async (req: Request, res: Response) => {
       dataToUpdate.totalAmount = parsedAmount;
     }
 
-    const conflictingBookings = await prisma.booking.findFirst({
-      where: {
-        gameId: booking.gameId,
-        date: booking.date,
-        AND: [
-          { startTime: { lt: booking.endTime } },
-          { endTime: { gt: booking.startTime } },
-        ],
-      },
-    });
+    const newStartTime = dataToUpdate.startTime || booking.startTime;
+    const newEndTime = dataToUpdate.endTime || booking.endTime;
+    const bookingDate = dataToUpdate.date || booking.date;
 
-    if (conflictingBookings) {
-      return res.status(409).json({
-        message: "Time slot already booked for this game on the selected date.",
+    const isExpanding =
+      newStartTime < booking.startTime || newEndTime > booking.endTime;
+
+    if (isExpanding) {
+      const conflictingBooking = await prisma.booking.findFirst({
+        where: {
+          id: { not: id },
+          gameId: booking.gameId,
+          date: bookingDate,
+          startTime: { lt: newEndTime },
+          endTime: { gt: newStartTime },
+        },
       });
+
+      if (conflictingBooking) {
+        return res.status(409).json({
+          message: `Time slot already booked from ${conflictingBooking.startTime.toLocaleTimeString()} to ${conflictingBooking.endTime.toLocaleTimeString()}.`,
+        });
+      }
     }
 
     const updated = await prisma.booking.update({
