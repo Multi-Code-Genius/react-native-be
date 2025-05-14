@@ -113,6 +113,14 @@ export const updateBooking = async (req: Request, res: Response) => {
 
     const dataToUpdate: any = {};
 
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
     if (date) {
       dataToUpdate.date = new Date(date);
     }
@@ -142,6 +150,23 @@ export const updateBooking = async (req: Request, res: Response) => {
       dataToUpdate.totalAmount = parsedAmount;
     }
 
+    const conflictingBookings = await prisma.booking.findFirst({
+      where: {
+        gameId: booking.gameId,
+        date: booking.date,
+        AND: [
+          { startTime: { lt: booking.endTime } },
+          { endTime: { gt: booking.startTime } },
+        ],
+      },
+    });
+
+    if (conflictingBookings) {
+      return res.status(409).json({
+        message: "Time slot already booked for this game on the selected date.",
+      });
+    }
+
     const updated = await prisma.booking.update({
       where: { id },
       data: dataToUpdate,
@@ -156,12 +181,25 @@ export const updateBooking = async (req: Request, res: Response) => {
 
 export const getBookigById = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
-    // const bookings = await prisma.booking.findMany({
-    //   where: { userId },
-    //   include: { game: true, timeSlot: true },
-    // });
-    res.json({ success: true });
+    const { bookingId } = req.params;
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        game: {
+          select: {
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            profile_pic: true,
+            mobileNumber: true,
+          },
+        },
+      },
+    });
+    res.json({ message: "Booking Data", booking });
   } catch (err) {
     res.status(500).json({ success: false, error: "Failed to get bookings" });
   }

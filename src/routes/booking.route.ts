@@ -23,8 +23,8 @@ bookingRoutes.patch(
   updateBookingStatus as unknown as RequestHandler
 );
 
-bookingRoutes.post(
-  "/user/:userId",
+bookingRoutes.get(
+  "/one-booking/:bookingId",
   authMiddleware,
   getBookigById as unknown as RequestHandler
 );
