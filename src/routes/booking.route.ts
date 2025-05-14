@@ -5,6 +5,7 @@ import {
   createBooking,
   getBookigById,
   getBookingByGameId,
+  getBookingByWeek,
   updateBooking,
   updateBookingStatus,
 } from "../controllers/booking.controller";
@@ -45,6 +46,12 @@ bookingRoutes.patch(
   "/update/:id",
   authMiddleware,
   updateBooking as unknown as RequestHandler
+);
+
+bookingRoutes.get(
+  "/week/:gameId/:start/:end",
+  authMiddleware,
+  getBookingByWeek as unknown as RequestHandler
 );
 
 export default bookingRoutes;

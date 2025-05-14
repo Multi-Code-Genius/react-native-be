@@ -207,8 +207,8 @@ export const getBookigById = async (req: Request, res: Response) => {
       },
     });
     res.json({ message: "Booking Data", booking });
-  } catch (err) {
-    res.status(500).json({ success: false, error: "Failed to get bookings" });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message || "Failed to get bookings" });
   }
 };
 
@@ -266,5 +266,48 @@ export const cancelBooking = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: err.message || "Failed to Cancel bookings" });
+  }
+};
+
+export const getBookingByWeek = async (req: Request, res: Response) => {
+  try {
+    const { gameId, start, end } = req.params;
+
+    if (!start || !end) {
+      return res.status(400).json({ message: "Invalid date range." });
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date format." });
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: {
+        gameId,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            profile_pic: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({ message: "Fetch Booking Data", bookings });
+  } catch (err: any) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: err.message || "Failed to get bookings" });
   }
 };
