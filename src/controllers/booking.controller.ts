@@ -8,6 +8,14 @@ export const createBooking = async (req: Request, res: Response) => {
 
     const bookingDate = new Date(date);
 
+    const today = new Date();
+
+    if (bookingDate < today) {
+      return res
+        .status(400)
+        .json({ message: "Booking date cannot be in the past." });
+    }
+
     function istToUTC(time: string, date: string) {
       const istDateTime = new Date(`${date}T${convertTo24Hour(time)}+05:30`);
       return new Date(istDateTime.toISOString());
@@ -121,7 +129,6 @@ export const updateBooking = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // === Helper functions ===
     const now = new Date();
 
     function convertTo24Hour(time12h: string): string {
@@ -142,7 +149,7 @@ export const updateBooking = async (req: Request, res: Response) => {
       return new Date(`${dateStr}T${time24}:00+05:30`);
     }
 
-    const bookingDate = booking.date; // Original booking date
+    const bookingDate = booking.date;
 
     const today = new Date();
     const todayDateOnly = new Date(
@@ -156,14 +163,12 @@ export const updateBooking = async (req: Request, res: Response) => {
       bookingDate.getDate()
     );
 
-    // === Check 1: Booking date must not be in the past ===
     if (bookingDateOnly < todayDateOnly) {
       return res
         .status(400)
         .json({ message: "Cannot update. Booking is for a past date." });
     }
 
-    // === Check 2: If booking date is today, start/end time must be in the future ===
     if (bookingDateOnly.getTime() === todayDateOnly.getTime()) {
       if (startTime) {
         const proposedStart = istToUTC(
@@ -187,7 +192,6 @@ export const updateBooking = async (req: Request, res: Response) => {
       }
     }
 
-    // === Proceed with update ===
     if (date) {
       dataToUpdate.date = new Date(date);
     }
