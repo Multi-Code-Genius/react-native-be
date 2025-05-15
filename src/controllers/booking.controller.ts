@@ -8,12 +8,47 @@ export const createBooking = async (req: Request, res: Response) => {
 
     const bookingDate = new Date(date);
 
+    const now = new Date();
     const today = new Date();
 
-    if (bookingDate < today) {
+    const todayDateOnly = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const bookingDateOnly = new Date(
+      bookingDate.getFullYear(),
+      bookingDate.getMonth(),
+      bookingDate.getDate()
+    );
+
+    if (bookingDateOnly < todayDateOnly) {
       return res
         .status(400)
-        .json({ message: "Booking date cannot be in the past." });
+        .json({ message: "Cannot update. Booking is for a past date." });
+    }
+
+    if (bookingDateOnly.getTime() === todayDateOnly.getTime()) {
+      if (startTime) {
+        const proposedStart = istToUTC(
+          startTime,
+          bookingDate.toISOString().split("T")[0]
+        );
+        if (proposedStart < now) {
+          return res
+            .status(400)
+            .json({ message: "Start time is in the past." });
+        }
+      }
+      if (endTime) {
+        const proposedEnd = istToUTC(
+          endTime,
+          bookingDate.toISOString().split("T")[0]
+        );
+        if (proposedEnd < now) {
+          return res.status(400).json({ message: "End time is in the past." });
+        }
+      }
     }
 
     function istToUTC(time: string, date: string) {
