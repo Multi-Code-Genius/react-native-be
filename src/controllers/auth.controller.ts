@@ -254,11 +254,11 @@ export const sendOtp = async (req: Request, res: Response) => {
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: number,
+          // email: number,
           otp,
           otpExpiry,
           role: "admin",
-          mobileNumber: uuidv4(),
+          mobileNumber: number,
         },
       });
     } else {
@@ -318,6 +318,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { mobileNumber: number },
     });
+
     if (!user || !user.otp || !user.otpExpiry)
       return res.status(400).json({ error: "OTP not found or expired" });
 
