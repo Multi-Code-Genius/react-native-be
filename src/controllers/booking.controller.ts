@@ -121,38 +121,83 @@ export const updateBooking = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    // === Helper functions ===
     const now = new Date();
 
-    function istToUTC(time: string, date: string) {
-      const istDateTime = new Date(`${date}T${convertTo24Hour(time)}+05:30`);
-      return new Date(istDateTime.toISOString());
+    function convertTo24Hour(time12h: string): string {
+      const [time, modifier] = time12h.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+
+      if (modifier === "PM" && hours < 12) hours += 12;
+      if (modifier === "AM" && hours === 12) hours = 0;
+
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}`;
     }
 
-    let newDate = date ? new Date(date) : booking.date;
-    let newStartTime =
-      startTime && date ? istToUTC(startTime, date) : booking.startTime;
-    let newEndTime =
-      endTime && date ? istToUTC(endTime, date) : booking.endTime;
-
-    if (
-      (startTime && date && newStartTime < now) ||
-      (endTime && date && newEndTime < now) ||
-      (date && newDate < now)
-    ) {
-      return res.status(400).json({
-        message: "Cannot update booking to a past date or time.",
-      });
+    function istToUTC(time: string, dateStr: string): Date {
+      const time24 = convertTo24Hour(time);
+      return new Date(`${dateStr}T${time24}:00+05:30`);
     }
 
+    const bookingDate = booking.date; // Original booking date
+
+    const today = new Date();
+    const todayDateOnly = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const bookingDateOnly = new Date(
+      bookingDate.getFullYear(),
+      bookingDate.getMonth(),
+      bookingDate.getDate()
+    );
+
+    // === Check 1: Booking date must not be in the past ===
+    if (bookingDateOnly < todayDateOnly) {
+      return res
+        .status(400)
+        .json({ message: "Cannot update. Booking is for a past date." });
+    }
+
+    // === Check 2: If booking date is today, start/end time must be in the future ===
+    if (bookingDateOnly.getTime() === todayDateOnly.getTime()) {
+      if (startTime) {
+        const proposedStart = istToUTC(
+          startTime,
+          bookingDate.toISOString().split("T")[0]
+        );
+        if (proposedStart < now) {
+          return res
+            .status(400)
+            .json({ message: "Start time is in the past." });
+        }
+      }
+      if (endTime) {
+        const proposedEnd = istToUTC(
+          endTime,
+          bookingDate.toISOString().split("T")[0]
+        );
+        if (proposedEnd < now) {
+          return res.status(400).json({ message: "End time is in the past." });
+        }
+      }
+    }
+
+    // === Proceed with update ===
     if (date) {
-      dataToUpdate.date = newDate;
+      dataToUpdate.date = new Date(date);
     }
 
     if (startTime && date) {
-      dataToUpdate.startTime = newStartTime;
+      dataToUpdate.startTime = istToUTC(startTime, date);
     }
+
     if (endTime && date) {
-      dataToUpdate.endTime = newEndTime;
+      dataToUpdate.endTime = istToUTC(endTime, date);
     }
 
     if (nets !== undefined) {
@@ -165,27 +210,6 @@ export const updateBooking = async (req: Request, res: Response) => {
         throw new Error("Invalid totalAmount");
       }
       dataToUpdate.totalAmount = parsedAmount;
-    }
-
-    const isExpanding =
-      newStartTime < booking.startTime || newEndTime > booking.endTime;
-
-    if (isExpanding) {
-      const conflictingBooking = await prisma.booking.findFirst({
-        where: {
-          id: { not: id },
-          gameId: booking.gameId,
-          date: newDate,
-          startTime: { lt: newEndTime },
-          endTime: { gt: newStartTime },
-        },
-      });
-
-      if (conflictingBooking) {
-        return res.status(409).json({
-          message: `Time slot already booked from ${conflictingBooking.startTime.toLocaleTimeString()} to ${conflictingBooking.endTime.toLocaleTimeString()}.`,
-        });
-      }
     }
 
     const updated = await prisma.booking.update({
