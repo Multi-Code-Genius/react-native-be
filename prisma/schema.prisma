@@ -227,13 +227,12 @@ model TimeSlot {
   bookingId  String?
 }
 
-
 model Booking {
   id          String     @id @default(uuid())
-  
-  userMobile  String
-  user        User       @relation(fields: [userMobile], references: [mobileNumber])
-  
+
+  userId      String    
+  user        User?      @relation(fields: [userId], references: [id])
+
   game        Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
   gameId      String
 
@@ -250,8 +249,6 @@ model Booking {
   payments    Payment[]
   TimeSlot    TimeSlot[]
 }
-
-
 
 
 enum BookingStatus {

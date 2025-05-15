@@ -44,14 +44,14 @@ export const createBooking = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: {
         mobileNumber: number,
       },
     });
 
     if (!user) {
-      await prisma.user.create({
+      user = await prisma.user.create({
         data: {
           mobileNumber: number,
           name,
@@ -61,7 +61,6 @@ export const createBooking = async (req: Request, res: Response) => {
 
     const booking = await prisma.booking.create({
       data: {
-        userMobile: number,
         gameId,
         date: bookingDate,
         startTime: requestedStart,
@@ -69,6 +68,7 @@ export const createBooking = async (req: Request, res: Response) => {
         nets,
         totalAmount,
         status: "PENDING",
+        userId: user.id,
       },
       include: {
         game: {
@@ -118,23 +118,41 @@ export const updateBooking = async (req: Request, res: Response) => {
     });
 
     if (!booking) {
-      throw new Error("Booking not found");
+      return res.status(404).json({ message: "Booking not found" });
     }
 
-    if (date) {
-      dataToUpdate.date = new Date(date);
-    }
+    const now = new Date();
 
     function istToUTC(time: string, date: string) {
       const istDateTime = new Date(`${date}T${convertTo24Hour(time)}+05:30`);
       return new Date(istDateTime.toISOString());
     }
 
+    let newDate = date ? new Date(date) : booking.date;
+    let newStartTime =
+      startTime && date ? istToUTC(startTime, date) : booking.startTime;
+    let newEndTime =
+      endTime && date ? istToUTC(endTime, date) : booking.endTime;
+
+    if (
+      (startTime && date && newStartTime < now) ||
+      (endTime && date && newEndTime < now) ||
+      (date && newDate < now)
+    ) {
+      return res.status(400).json({
+        message: "Cannot update booking to a past date or time.",
+      });
+    }
+
+    if (date) {
+      dataToUpdate.date = newDate;
+    }
+
     if (startTime && date) {
-      dataToUpdate.startTime = istToUTC(startTime, date);
+      dataToUpdate.startTime = newStartTime;
     }
     if (endTime && date) {
-      dataToUpdate.endTime = istToUTC(endTime, date);
+      dataToUpdate.endTime = newEndTime;
     }
 
     if (nets !== undefined) {
@@ -149,10 +167,6 @@ export const updateBooking = async (req: Request, res: Response) => {
       dataToUpdate.totalAmount = parsedAmount;
     }
 
-    const newStartTime = dataToUpdate.startTime || booking.startTime;
-    const newEndTime = dataToUpdate.endTime || booking.endTime;
-    const bookingDate = dataToUpdate.date || booking.date;
-
     const isExpanding =
       newStartTime < booking.startTime || newEndTime > booking.endTime;
 
@@ -161,7 +175,7 @@ export const updateBooking = async (req: Request, res: Response) => {
         where: {
           id: { not: id },
           gameId: booking.gameId,
-          date: bookingDate,
+          date: newDate,
           startTime: { lt: newEndTime },
           endTime: { gt: newStartTime },
         },
@@ -178,18 +192,8 @@ export const updateBooking = async (req: Request, res: Response) => {
       where: { id },
       data: dataToUpdate,
       include: {
-        game: {
-          select: {
-            name: true,
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            profile_pic: true,
-            mobileNumber: true,
-          },
-        },
+        game: { select: { name: true } },
+        user: { select: { name: true, profile_pic: true, mobileNumber: true } },
       },
     });
 
