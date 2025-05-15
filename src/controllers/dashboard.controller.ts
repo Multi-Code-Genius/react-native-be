@@ -1,44 +1,98 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
+import moment from "moment";
 
 export const getDashboardData = async (req: Request, res: Response) => {
   try {
-    const gameId = req.params.gameId;
+    const { gameId } = req.params;
+    const userId = req.user?.userId;
 
-    const dashboardData = await prisma.booking.findMany({
-      where: {
-        gameId,
-      },
+    const today = moment().startOf("day").toDate();
+    const startOfMonth = moment().startOf("month").toDate();
+    const endOfMonth = moment().endOf("month").toDate();
+    const startOfWeek = moment().startOf("week").toDate();
+    const endOfWeek = moment().endOf("week").toDate();
+
+    let allBookings = [];
+
+    if (gameId === "all") {
+      const userCreatedGames = await prisma.game.findMany({
+        where: { createdById: userId },
+        select: { id: true },
+      });
+
+      const gameIds = userCreatedGames.map((g) => g.id);
+
+      allBookings = await prisma.booking.findMany({
+        where: {
+          gameId: { in: gameIds },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              mobileNumber: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    } else {
+      allBookings = await prisma.booking.findMany({
+        where: { gameId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              mobileNumber: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    }
+
+    const newUsersThisMonth = allBookings.filter((booking) => {
+      const userCreatedAt = booking.user?.createdAt;
+      return (
+        userCreatedAt &&
+        userCreatedAt >= startOfMonth &&
+        userCreatedAt <= endOfMonth
+      );
     });
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const newUserIds = new Set(newUsersThisMonth.map((b) => b.user?.id));
+    const newUsersCount = newUserIds.size;
 
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const bookingsThisMonth = allBookings.filter(
+      (b) => b.createdAt >= startOfMonth && b.createdAt <= endOfMonth
+    );
+    const thisMonthBookingsCount = bookingsThisMonth.length;
 
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const todaysBookings = dashboardData.filter((booking) => {
-      const bookingDate = new Date(booking.date);
-      return bookingDate.toDateString() === today.toDateString();
-    });
+    const todaysBookings = allBookings.filter((b) =>
+      moment(b.date).isSame(today, "day")
+    );
     const todaysBookingsCount = todaysBookings.length;
-    const todaysBookingsAmount = todaysBookings.reduce(
-      (acc, booking) => acc + booking.totalAmount,
+    const todaysTotalAmount = todaysBookings.reduce(
+      (sum, b) => sum + b.totalAmount,
       0
     );
 
-    const thisWeekBookings = dashboardData.filter((booking) => {
-      const bookingDate = new Date(booking.date);
-      return bookingDate >= startOfWeek && bookingDate <= endOfWeek;
-    });
-
-    const thisWeekBookingsTotalAmount = thisWeekBookings.reduce(
-      (acc, booking) => acc + booking.totalAmount,
+    const thisWeekBookings = allBookings.filter(
+      (b) => b.date >= startOfWeek && b.date <= endOfWeek
+    );
+    const thisWeekTotalAmount = thisWeekBookings.reduce(
+      (sum, b) => sum + b.totalAmount,
       0
     );
 
@@ -52,26 +106,17 @@ export const getDashboardData = async (req: Request, res: Response) => {
       Saturday: 0,
     };
 
-    thisWeekBookings.forEach((booking) => {
-      const day = new Date(booking.date).toLocaleDateString("en-US", {
-        weekday: "long",
-      });
-      weeklyBookingsCountByDay[day] = (weeklyBookingsCountByDay[day] || 0) + 1;
+    thisWeekBookings.forEach((b) => {
+      const day = moment(b.date).format("dddd");
+      weeklyBookingsCountByDay[day] += 1;
     });
 
-    const thisMonthBookings = dashboardData.filter((booking) => {
-      const bookingDate = new Date(booking.date);
-      return bookingDate >= startOfMonth && bookingDate <= endOfMonth;
-    });
-    const thisMonthBookingsTotalAmount = thisMonthBookings.reduce(
-      (acc, booking) => acc + booking.totalAmount,
+    const thisMonthTotalAmount = bookingsThisMonth.reduce(
+      (sum, b) => sum + b.totalAmount,
       0
     );
 
-    const upcomingBookings = dashboardData.filter((booking) => {
-      const bookingDate = new Date(booking.date);
-      return bookingDate >= today;
-    });
+    const upcomingBookings = allBookings.filter((b) => b.date >= today);
 
     const statusCounts = {
       PENDING: 0,
@@ -80,23 +125,27 @@ export const getDashboardData = async (req: Request, res: Response) => {
       COMPLETED: 0,
     };
 
-    upcomingBookings.forEach((booking) => {
-      if (statusCounts[booking.status] !== undefined) {
-        statusCounts[booking.status]++;
+    upcomingBookings.forEach((b) => {
+      if (statusCounts[b.status] !== undefined) {
+        statusCounts[b.status]++;
       }
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Dashboard data fetched successfully",
+      newBookings: allBookings,
+      bookingsThisMonth,
+      thisMonthBookingsCount,
       todaysBookingsCount,
-      todaysBookingsAmount,
-      thisWeekBookingsTotalAmount,
-      thisMonthBookingsTotalAmount,
+      todaysTotalAmount,
+      newUsersCount,
+      thisWeekTotalAmount,
+      thisMonthTotalAmount,
       statusCounts,
       weeklyBookingsCountByDay,
     });
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    res.status(500).json({ error: "Failed to fetch dashboard data" });
+    console.error("Dashboard Error:", error);
+    return res.status(500).json({ error: "Failed to load dashboard data" });
   }
 };

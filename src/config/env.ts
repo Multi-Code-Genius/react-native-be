@@ -13,3 +13,5 @@ export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 export const IMAGEPUBLIC_API_KEY = process.env.IMAGEPUBLIC_API_KEY;
 export const IMAGEPRIVETE_API_KEY = process.env.IMAGEPRIVETE_API_KEY;
 export const IMAGE_ENDPOINT = process.env.IMAGE_ENDPOINT;
+export const ULTRAMSG_INSTANCE_ID = process.env.ULTRAMSG_INSTANCE_ID!;
+export const ULTRAMSG_TOKEN = process.env.ULTRAMSG_TOKEN!;

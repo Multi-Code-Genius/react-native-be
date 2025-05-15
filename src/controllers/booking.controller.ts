@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 import { convertTo24Hour } from "../helper/helper";
+import sendWhatsAppMessage from "../config/whatsappClient";
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
@@ -121,6 +122,11 @@ export const createBooking = async (req: Request, res: Response) => {
         },
       },
     });
+
+    // sendWhatsAppMessage(
+    //   "8849321658",
+    //   `📅 Hello ${user.name},\n\nYour booking for *${booking.game.name}* has been successfully confirmed!\n\n🗓️ Date: ${booking.date}\n⏰ Time: ${booking.startTime} to ${booking.endTime}\n\nThank you for choosing us. We look forward to seeing you soon!\n\n_— Multi Code Genius Team_`
+    // );
 
     res.status(200).json({ message: "Booking Created", booking });
   } catch (error: any) {

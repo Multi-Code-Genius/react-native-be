@@ -15,6 +15,7 @@ import { OAuth2Client } from "google-auth-library";
 import { generateOtp } from "../utils/generateOtp";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 import { v4 as uuidv4 } from "uuid";
+import sendWhatsAppMessage from "../config/whatsappClient";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -240,20 +241,20 @@ export const googleLogin = async (req: Request, res: Response) => {
 
 export const sendOtp = async (req: Request, res: Response) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "email is required" });
+    const { number } = req.body;
+    if (!number) return res.status(400).json({ error: "number is required" });
 
     const otp = generateOtp();
     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
 
     let user = await prisma.user.findUnique({
-      where: { email: email.toLocaleLowerCase() },
+      where: { mobileNumber: number },
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: email.toLocaleLowerCase(),
+          email: number,
           otp,
           otpExpiry,
           role: "admin",
@@ -262,15 +263,17 @@ export const sendOtp = async (req: Request, res: Response) => {
       });
     } else {
       await prisma.user.update({
-        where: { email: email.toLocaleLowerCase() },
+        where: { mobileNumber: number },
         data: { otp, otpExpiry },
       });
     }
 
-    await sendOtpEmail(email, otp);
+    // await sendOtpEmail(number, otp);
+
+    sendWhatsAppMessage(number, `OTP for Multi Code Genius is ${otp}`);
 
     return res.json({
-      message: "OTP sent successfully to your email. Please check your inbox.",
+      message: "OTP sent successfully to your number. Please check your inbox.",
     });
   } catch (err: any) {
     console.error(err);
@@ -310,10 +313,10 @@ export const reSendOtp = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { email, otp } = req.body;
+    const { number, otp } = req.body;
 
     const user = await prisma.user.findUnique({
-      where: { email: email.toLocaleLowerCase() },
+      where: { mobileNumber: number },
     });
     if (!user || !user.otp || !user.otpExpiry)
       return res.status(400).json({ error: "OTP not found or expired" });
@@ -324,7 +327,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "OTP expired" });
 
     await prisma.user.update({
-      where: { email: email.toLocaleLowerCase() },
+      where: { mobileNumber: number },
       data: { otp: null, otpExpiry: null },
     });
 
@@ -338,7 +341,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
       {
         userId: user.id,
         name: user?.name,
-        email: user.email?.toLocaleLowerCase(),
+        mobileNumber: user.mobileNumber,
       },
       SECRET_KEY,
       {
@@ -352,3 +355,88 @@ export const verifyOtp = async (req: Request, res: Response) => {
     return res.status(500).send("Login failed");
   }
 };
+
+// export const verifyOtp = async (req: Request, res: Response) => {
+//   try {
+//     const { email, otp } = req.body;
+
+//     const user = await prisma.user.findUnique({
+//       where: { email: email.toLocaleLowerCase() },
+//     });
+//     if (!user || !user.otp || !user.otpExpiry)
+//       return res.status(400).json({ error: "OTP not found or expired" });
+
+//     if (user.otp !== otp) return res.status(401).json({ error: "Invalid OTP" });
+
+//     if (user.otpExpiry < new Date())
+//       return res.status(401).json({ error: "OTP expired" });
+
+//     await prisma.user.update({
+//       where: { email: email.toLocaleLowerCase() },
+//       data: { otp: null, otpExpiry: null },
+//     });
+
+//     if (!SECRET_KEY) {
+//       console.error("JWT_SECRET is not set in the environment variables");
+//       res.status(500).json({ message: "Internal server error" });
+//       return;
+//     }
+
+//     const token = jwt.sign(
+//       {
+//         userId: user.id,
+//         name: user?.name,
+//         email: user.email?.toLocaleLowerCase(),
+//       },
+//       SECRET_KEY,
+//       {
+//         expiresIn: "7d",
+//       }
+//     );
+
+//     return res.status(200).json({ message: "Login successful", token });
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).send("Login failed");
+//   }
+// };
+
+// export const sendOtp = async (req: Request, res: Response) => {
+//   try {
+//     const { email } = req.body;
+//     if (!email) return res.status(400).json({ error: "email is required" });
+
+//     const otp = generateOtp();
+//     const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+//     let user = await prisma.user.findUnique({
+//       where: { email: email.toLocaleLowerCase() },
+//     });
+
+//     if (!user) {
+//       user = await prisma.user.create({
+//         data: {
+//           email: email.toLocaleLowerCase(),
+//           otp,
+//           otpExpiry,
+//           role: "admin",
+//           mobileNumber: uuidv4(),
+//         },
+//       });
+//     } else {
+//       await prisma.user.update({
+//         where: { email: email.toLocaleLowerCase() },
+//         data: { otp, otpExpiry },
+//       });
+//     }
+
+//     await sendOtpEmail(email, otp);
+
+//     return res.json({
+//       message: "OTP sent successfully to your email. Please check your inbox.",
+//     });
+//   } catch (err: any) {
+//     console.error(err);
+//     return res.status(500).json({ message: err.message || "Login failed" });
+//   }
+// };
