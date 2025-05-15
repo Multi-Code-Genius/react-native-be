@@ -177,12 +177,26 @@ export const updateBooking = async (req: Request, res: Response) => {
     const updated = await prisma.booking.update({
       where: { id },
       data: dataToUpdate,
+      include: {
+        game: {
+          select: {
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            profile_pic: true,
+            mobileNumber: true,
+          },
+        },
+      },
     });
 
-    res.json({ success: true, booking: updated });
+    res.json({ message: "Booking Updated Successfully", booking: updated });
   } catch (err) {
     console.error(err);
-    res.status(400).json({ success: false, error: "Failed to update booking" });
+    res.status(400).json({ message: "Failed to update booking" });
   }
 };
 
