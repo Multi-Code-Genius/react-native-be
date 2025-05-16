@@ -8,6 +8,7 @@ import {
   getBookigById,
   getBookingByGameId,
   getBookingByWeek,
+  suggestExistingCustomer,
   updateBooking,
   updateBookingStatus,
 } from "../controllers/booking.controller";
@@ -66,6 +67,12 @@ bookingRoutes.get(
   "/customer/:customerId",
   authMiddleware,
   customer as unknown as RequestHandler
+);
+
+bookingRoutes.get(
+  "/suggest-customer/:number",
+  authMiddleware,
+  suggestExistingCustomer as unknown as RequestHandler
 );
 
 export default bookingRoutes;
@@ -426,4 +433,80 @@ export default bookingRoutes;
  *         description: Customer not found
  *       500:
  *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/booking/suggest-customer/{number}:
+ *   get:
+ *     summary: Suggest existing customers by partial or full mobile number
+ *     description: Returns a list of users who are already customers, matched by the given mobile number (partial or full).
+ *     tags:
+ *       - Booking
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: number
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Partial or full mobile number to search for existing customers
+ *     responses:
+ *       200:
+ *         description: Matching customers found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Suggestions found
+ *                 customers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: c1
+ *                       userId:
+ *                         type: string
+ *                         example: u1
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: u1
+ *                           name:
+ *                             type: string
+ *                             example: Jay
+ *                           mobileNumber:
+ *                             type: string
+ *                             example: 9876543210
+ *                           profile_pic:
+ *                             type: string
+ *                             example: https://example.com/image.jpg
+ *       404:
+ *         description: No matching customers found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No matching customers found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to suggest customers
  */

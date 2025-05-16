@@ -506,28 +506,39 @@ export const customer = async (req: Request, res: Response) => {
 export const suggestExistingCustomer = async (req: Request, res: Response) => {
   try {
     const adminId = req.user?.userId || "";
-
     const { number } = req.params;
 
-    const customer = await prisma.customer.findUnique({
+    const customers = await prisma.customer.findMany({
       where: {
-        userId_createdById: {
-          userId: number,
-          createdById: adminId,
+        createdById: adminId,
+        user: {
+          mobileNumber: {
+            startsWith: number,
+          },
+        },
+      },
+      select: {
+        id: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            mobileNumber: true,
+            profile_pic: true,
+          },
         },
       },
     });
 
-    if (customer) {
-      return res
-        .status(200)
-        .json({ message: "Customer already exists", customer });
+    if (customers.length === 0) {
+      return res.status(404).json({ message: "No matching customers found" });
     }
 
-    res.status(200).json({ message: "Customer does not exist" });
+    return res.status(200).json({ message: "Suggestions found", customers });
   } catch (error: any) {
     res
       .status(500)
-      .json({ message: error.message || "Failed to check customer" });
+      .json({ message: error.message || "Failed to suggest customers" });
   }
 };
