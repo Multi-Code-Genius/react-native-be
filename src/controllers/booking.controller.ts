@@ -71,31 +71,9 @@ export const createBooking = async (req: Request, res: Response) => {
 
     if (!game) throw new Error("Game not found");
 
-    const conflictingBookings = await prisma.booking.findFirst({
-      where: {
-        gameId,
-        date: bookingDate,
-        AND: [
-          { startTime: { lt: requestedEnd } },
-          { endTime: { gt: requestedStart } },
-        ],
-      },
-    });
-
-    if (conflictingBookings) {
-      return res.status(409).json({
-        message: "Time slot already booked for this game on the selected date.",
-      });
-    }
-
     let user = await prisma.user.findUnique({
       where: {
         mobileNumber: number,
-        // games: {
-        //   some: {
-        //     id: gameId,
-        //   },
-        // },
       },
     });
 
@@ -105,6 +83,49 @@ export const createBooking = async (req: Request, res: Response) => {
           mobileNumber: number,
           name,
         },
+      });
+    }
+
+    const conflictingBookings = await prisma.booking.findFirst({
+      where: {
+        gameId,
+        isCancel: false,
+        date: bookingDate,
+        AND: [
+          { startTime: { lt: requestedEnd } },
+          { endTime: { gt: requestedStart } },
+        ],
+      },
+    });
+
+    if (conflictingBookings && conflictingBookings.userId === user?.id) {
+      const newStart =
+        requestedStart < conflictingBookings.startTime
+          ? requestedStart
+          : conflictingBookings.startTime;
+
+      const newEnd =
+        requestedEnd > conflictingBookings.endTime
+          ? requestedEnd
+          : conflictingBookings.endTime;
+
+      const updatedBooking = await prisma.booking.update({
+        where: { id: conflictingBookings.id },
+        data: {
+          startTime: newStart,
+          endTime: newEnd,
+        },
+      });
+
+      return res.status(200).json({
+        message: "Booking time extended successfully.",
+        data: updatedBooking,
+      });
+    }
+
+    if (conflictingBookings && conflictingBookings.userId !== user?.id) {
+      return res.status(409).json({
+        message: "Time slot already booked.",
       });
     }
 
@@ -163,7 +184,10 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 export const updateBooking = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { startTime, endTime, nets, date, totalAmount } = req.body;
+    const { startTime, endTime, nets, date, totalAmount, userId } = req.body;
+
+    const requestedStart = istToUTC(startTime, date);
+    const requestedEnd = istToUTC(endTime, date);
 
     const dataToUpdate: any = {};
 
@@ -238,6 +262,53 @@ export const updateBooking = async (req: Request, res: Response) => {
       }
     }
 
+    const conflictingBookings = await prisma.booking.findFirst({
+      where: {
+        gameId: booking.gameId,
+        isCancel: false,
+        date: bookingDate,
+        AND: [
+          { startTime: { lt: requestedEnd } },
+          { endTime: { gt: requestedStart } },
+        ],
+      },
+    });
+
+    if (conflictingBookings && conflictingBookings.userId === booking.userId) {
+      const newStart =
+        requestedStart < conflictingBookings.startTime
+          ? requestedStart
+          : conflictingBookings.startTime;
+
+      const newEnd =
+        requestedEnd > conflictingBookings.endTime
+          ? requestedEnd
+          : conflictingBookings.endTime;
+
+      const updatedBooking = await prisma.booking.update({
+        where: { id: conflictingBookings.id },
+        data: {
+          startTime: newStart,
+          endTime: newEnd,
+        },
+      });
+
+      await prisma.booking.delete({
+        where: { id: booking.id },
+      });
+
+      return res.status(200).json({
+        message: "Booking time extended/updated successfully.",
+        data: updatedBooking,
+      });
+    }
+
+    if (conflictingBookings && conflictingBookings.userId !== booking.userId) {
+      return res.status(409).json({
+        message: "Time slot already booked.",
+      });
+    }
+
     if (date) {
       dataToUpdate.date = new Date(date);
     }
@@ -282,7 +353,7 @@ export const getBookigById = async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+      where: { id: bookingId, isCancel: false },
       include: {
         game: {
           select: {
@@ -319,6 +390,7 @@ export const getBookingByGameId = async (req: Request, res: Response) => {
       where: {
         gameId: id,
         date: isoDate,
+        isCancel: false,
       },
       include: {
         user: {
@@ -326,6 +398,7 @@ export const getBookingByGameId = async (req: Request, res: Response) => {
             id: true,
             name: true,
             profile_pic: true,
+            mobileNumber: true,
           },
         },
       },
@@ -380,6 +453,7 @@ export const getBookingByWeek = async (req: Request, res: Response) => {
     const bookings = await prisma.booking.findMany({
       where: {
         gameId,
+        isCancel: false,
         date: {
           gte: startDate,
           lte: endDate,
