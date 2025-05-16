@@ -13,74 +13,74 @@ export const getProfile = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        messagesReceived: {
-          where: {
-            read: false,
-          },
-        },
+        // messagesReceived: {
+        //   where: {
+        //     read: false,
+        //   },
+        // },
         games: {
           select: {
             id: true,
             name: true,
           },
         },
-        comments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profile_pic: true,
-              },
-            },
-          },
-        },
-        likes: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                profile_pic: true,
-              },
-            },
-          },
-        },
-        videos: true,
-        posts: true,
-        sentRequests: {
-          where: {
-            status: "pending",
-          },
-          include: {
-            receiver: {
-              select: {
-                id: true,
-                name: true,
-                profile_pic: true,
-                isOnline: true,
-                lastSeen: true,
-              },
-            },
-          },
-        },
-        receivedRequests: {
-          where: {
-            status: "pending",
-          },
-          include: {
-            sender: {
-              select: {
-                id: true,
-                name: true,
-                profile_pic: true,
-                isOnline: true,
-                lastSeen: true,
-              },
-            },
-          },
-        },
-        RoomUser: true,
+        // comments: {
+        //   include: {
+        //     user: {
+        //       select: {
+        //         id: true,
+        //         name: true,
+        //         profile_pic: true,
+        //       },
+        //     },
+        //   },
+        // },
+        //   likes: {
+        //     include: {
+        //       user: {
+        //         select: {
+        //           id: true,
+        //           name: true,
+        //           profile_pic: true,
+        //         },
+        //       },
+        //     },
+        //   },
+        //   videos: true,
+        //   posts: true,
+        //   sentRequests: {
+        //     where: {
+        //       status: "pending",
+        //     },
+        //     include: {
+        //       receiver: {
+        //         select: {
+        //           id: true,
+        //           name: true,
+        //           profile_pic: true,
+        //           isOnline: true,
+        //           lastSeen: true,
+        //         },
+        //       },
+        //     },
+        //   },
+        //   receivedRequests: {
+        //     where: {
+        //       status: "pending",
+        //     },
+        //     include: {
+        //       sender: {
+        //         select: {
+        //           id: true,
+        //           name: true,
+        //           profile_pic: true,
+        //           isOnline: true,
+        //           lastSeen: true,
+        //         },
+        //       },
+        //     },
+        //   },
+        //   RoomUser: true,
       },
     });
 
@@ -88,85 +88,85 @@ export const getProfile = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const mutualFriends = await prisma.friend.findMany({
-      where: {
-        OR: [{ userId: id }, { friendId: id }],
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            profile_pic: true,
-            isOnline: true,
-            email: true,
-            location: true,
-            lastSeen: true,
-          },
-        },
-        friend: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            location: true,
-            profile_pic: true,
-            isOnline: true,
-            lastSeen: true,
-          },
-        },
-      },
-    });
+    // const mutualFriends = await prisma.friend.findMany({
+    //   where: {
+    //     OR: [{ userId: id }, { friendId: id }],
+    //   },
+    //   include: {
+    //     user: {
+    //       select: {
+    //         id: true,
+    //         name: true,
+    //         profile_pic: true,
+    //         isOnline: true,
+    //         email: true,
+    //         location: true,
+    //         lastSeen: true,
+    //       },
+    //     },
+    //     friend: {
+    //       select: {
+    //         id: true,
+    //         name: true,
+    //         email: true,
+    //         location: true,
+    //         profile_pic: true,
+    //         isOnline: true,
+    //         lastSeen: true,
+    //       },
+    //     },
+    //   },
+    // });
 
-    const friendsData = mutualFriends.map((fr) => {
-      const friendUser = fr.user.id === id ? fr.friend : fr.user;
-      return {
-        id: friendUser.id,
-        data: friendUser,
-      };
-    });
+    // const friendsData = mutualFriends.map((fr) => {
+    //   const friendUser = fr.user.id === id ? fr.friend : fr.user;
+    //   return {
+    //     id: friendUser.id,
+    //     data: friendUser,
+    //   };
+    // });
 
-    const friendIds = friendsData.map((f) => f.id);
+    // const friendIds = friendsData.map((f) => f.id);
 
-    const allFriendRequests = await prisma.friendRequest.findMany({
-      where: {
-        OR: friendIds.flatMap((friendId) => [
-          { senderId: id, receiverId: friendId },
-          { senderId: friendId, receiverId: id },
-        ]),
-      },
-      select: {
-        id: true,
-        senderId: true,
-        receiverId: true,
-      },
-    });
+    // const allFriendRequests = await prisma.friendRequest.findMany({
+    //   where: {
+    //     OR: friendIds.flatMap((friendId) => [
+    //       { senderId: id, receiverId: friendId },
+    //       { senderId: friendId, receiverId: id },
+    //     ]),
+    //   },
+    //   select: {
+    //     id: true,
+    //     senderId: true,
+    //     receiverId: true,
+    //   },
+    // });
 
-    const friendsWithRequestId = friendsData.map((friend) => {
-      const request = allFriendRequests.find(
-        (fr) =>
-          (fr.senderId === id && fr.receiverId === friend.id) ||
-          (fr.senderId === friend.id && fr.receiverId === id)
-      );
+    // const friendsWithRequestId = friendsData.map((friend) => {
+    //   const request = allFriendRequests.find(
+    //     (fr) =>
+    //       (fr.senderId === id && fr.receiverId === friend.id) ||
+    //       (fr.senderId === friend.id && fr.receiverId === id)
+    //   );
 
-      return {
-        ...friend.data,
-        friendRequestId: request?.id ?? null,
-      };
-    });
+    //   return {
+    //     ...friend.data,
+    //     friendRequestId: request?.id ?? null,
+    //   };
+    // });
 
-    const friends = Array.from(
-      new Map(friendsWithRequestId.map((f) => [f.id, f])).values()
-    );
+    // const friends = Array.from(
+    //   new Map(friendsWithRequestId.map((f) => [f.id, f])).values()
+    // );
 
-    const fullUserData = {
-      ...user,
-      friends,
-    };
+    // const fullUserData = {
+    //   ...user,
+    //   friends,
+    // };
 
     res.status(200).json({
       message: "User Data Fetched successfully.",
-      user: fullUserData,
+      user: user,
     });
   } catch (error: unknown) {
     console.error("User profile error:", error);
