@@ -464,3 +464,40 @@ export const allUserBooking = async (req: Request, res: Response) => {
       .json({ message: error.message || "Failed to get bookings" });
   }
 };
+
+export const customer = async (req: Request, res: Response) => {
+  try {
+    const { customerId } = req.params;
+
+    const adminId = req.user?.userId || "";
+
+    const customer = await prisma.customer.findUnique({
+      where: {
+        id: customerId,
+        ownerId: adminId,
+      },
+      include: {
+        bookings: {
+          include: {
+            game: {
+              select: {
+                name: true,
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found." });
+    }
+
+    res.status(200).json({ message: "Customer Data", customer });
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to get bookings" });
+  }
+};

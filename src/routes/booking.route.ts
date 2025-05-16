@@ -4,6 +4,7 @@ import {
   allUserBooking,
   cancelBooking,
   createBooking,
+  customer,
   getBookigById,
   getBookingByGameId,
   getBookingByWeek,
@@ -59,6 +60,12 @@ bookingRoutes.get(
   "/user-booking",
   authMiddleware,
   allUserBooking as unknown as RequestHandler
+);
+
+bookingRoutes.get(
+  "/customer/:customerId",
+  authMiddleware,
+  customer as unknown as RequestHandler
 );
 
 export default bookingRoutes;
@@ -367,4 +374,56 @@ export default bookingRoutes;
  *         description: Unauthorized. Token is missing or invalid.
  *       500:
  *         description: Internal server error.
+ */
+
+/**
+ * @swagger
+ * /api/booking/customer/{customerId}:
+ *   get:
+ *     summary: Get bookings for a specific customer
+ *     tags:
+ *       - Booking
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID of the customer
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved bookings for the customer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 bookings:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       startTime:
+ *                         type: string
+ *                         format: date-time
+ *                       endTime:
+ *                         type: string
+ *                         format: date-time
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                       totalAmount:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *       404:
+ *         description: Customer not found
+ *       500:
+ *         description: Server error
  */
