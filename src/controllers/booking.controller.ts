@@ -91,6 +91,11 @@ export const createBooking = async (req: Request, res: Response) => {
     let user = await prisma.user.findUnique({
       where: {
         mobileNumber: number,
+        games: {
+          some: {
+            id: gameId,
+          },
+        },
       },
     });
 
@@ -413,6 +418,7 @@ export const allUserBooking = async (req: Request, res: Response) => {
         game: {
           select: {
             name: true,
+            id: true,
           },
         },
         user: {
@@ -427,12 +433,25 @@ export const allUserBooking = async (req: Request, res: Response) => {
       },
     });
 
-    const clients = bookings.map((booking) => {
-      const { ...restUser } = booking.user;
-      return restUser;
+    const clientsWithTotalAmount = bookings.map((client) => {
+      const totalSpent = client.user?.bookings?.reduce(
+        (sum: number, booking: any) => sum + booking.totalAmount,
+        0
+      );
+
+      const { ...restUser } = client.user;
+      const { name, id } = client.game;
+
+      return {
+        ...restUser,
+        game: { name, id },
+        totalSpentAmount: totalSpent,
+      };
     });
 
-    res.status(200).json({ message: "All User Booking", clients });
+    res
+      .status(200)
+      .json({ message: "All User Booking", clientsWithTotalAmount });
   } catch (error: any) {
     res
       .status(500)
