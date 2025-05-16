@@ -91,11 +91,11 @@ export const createBooking = async (req: Request, res: Response) => {
     let user = await prisma.user.findUnique({
       where: {
         mobileNumber: number,
-        games: {
-          some: {
-            id: gameId,
-          },
-        },
+        // games: {
+        //   some: {
+        //     id: gameId,
+        //   },
+        // },
       },
     });
 
