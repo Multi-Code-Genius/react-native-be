@@ -349,8 +349,9 @@ export const cancelBooking = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Booking not found." });
     }
 
-    await prisma.booking.delete({
+    await prisma.booking.update({
       where: { id: bookingId },
+      data: { isCancel: true },
     });
 
     res.status(200).json({ message: "User Booking Cancel successfully." });
