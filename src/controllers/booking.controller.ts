@@ -349,12 +349,13 @@ export const getBookingByGameId = async (req: Request, res: Response) => {
         isCancel: false,
       },
       include: {
-        user: {
+        customer: {
           select: {
             id: true,
             name: true,
-            profile_pic: true,
-            mobileNumber: true,
+            mobile: true,
+            userId: true,
+            createdById: true,
           },
         },
       },
