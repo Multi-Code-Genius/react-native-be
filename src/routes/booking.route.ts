@@ -1,6 +1,7 @@
 import express, { RequestHandler, Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
+  allUserBooking,
   cancelBooking,
   createBooking,
   getBookigById,
@@ -52,6 +53,12 @@ bookingRoutes.get(
   "/week/:gameId/:start/:end",
   authMiddleware,
   getBookingByWeek as unknown as RequestHandler
+);
+
+bookingRoutes.get(
+  "/user-booking",
+  authMiddleware,
+  allUserBooking as unknown as RequestHandler
 );
 
 export default bookingRoutes;
@@ -303,4 +310,61 @@ export default bookingRoutes;
  *                   $ref: '#/components/schemas/Booking'
  *       400:
  *         description: Failed to update booking status
+ */
+
+/**
+ * @swagger
+ * /api/booking/user-booking:
+ *   get:
+ *     summary: Get bookings of the current user
+ *     description: Returns a list of bookings created by the authenticated user.
+ *     tags:
+ *       - Booking
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of the user's bookings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     mobileNumber:
+ *                       type: string
+ *                     bookings:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           gameId:
+ *                             type: string
+ *                           date:
+ *                             type: string
+ *                             format: date-time
+ *                           startTime:
+ *                             type: string
+ *                             format: date-time
+ *                           endTime:
+ *                             type: string
+ *                             format: date-time
+ *                           status:
+ *                             type: string
+ *                           nets:
+ *                             type: number
+ *                           totalAmount:
+ *                             type: number
+ *       401:
+ *         description: Unauthorized. Token is missing or invalid.
+ *       500:
+ *         description: Internal server error.
  */

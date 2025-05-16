@@ -398,3 +398,44 @@ export const getBookingByWeek = async (req: Request, res: Response) => {
       .json({ message: err.message || "Failed to get bookings" });
   }
 };
+
+export const allUserBooking = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    const bookings = await prisma.booking.findMany({
+      where: {
+        game: {
+          createdById: userId,
+        },
+      },
+      include: {
+        game: {
+          select: {
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            profile_pic: true,
+            mobileNumber: true,
+            bookings: true,
+            id: true,
+          },
+        },
+      },
+    });
+
+    const clients = bookings.map((booking) => {
+      const { ...restUser } = booking.user;
+      return restUser;
+    });
+
+    res.status(200).json({ message: "All User Booking", clients });
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to get bookings" });
+  }
+};
