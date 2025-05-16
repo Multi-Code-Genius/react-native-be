@@ -1,13 +1,28 @@
 import { Request, Response } from "express";
-import { prisma } from "../utils/prisma";
 import { convertTo24Hour } from "../helper/helper";
-import sendWhatsAppMessage from "../config/whatsappClient";
+import { createCustomer, createUser } from "../utils/createdCustomer";
+import { prisma } from "../utils/prisma";
 
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const { startTime, endTime, nets, gameId, date, number, name } = req.body;
 
     const bookingDate = new Date(date);
+
+    const adminId = req.user?.userId || "";
+
+    const user = await createUser({
+      name,
+      mobile: number,
+      role: "user",
+    });
+
+    const customer = await createCustomer({
+      name,
+      mobile: number,
+      userId: user.id,
+      createdById: adminId,
+    });
 
     const now = new Date();
     const today = new Date();
@@ -71,21 +86,6 @@ export const createBooking = async (req: Request, res: Response) => {
 
     if (!game) throw new Error("Game not found");
 
-    let user = await prisma.user.findUnique({
-      where: {
-        mobileNumber: number,
-      },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          mobileNumber: number,
-          name,
-        },
-      });
-    }
-
     const conflictingBookings = await prisma.booking.findFirst({
       where: {
         gameId,
@@ -98,47 +98,34 @@ export const createBooking = async (req: Request, res: Response) => {
       },
     });
 
-    if (conflictingBookings && conflictingBookings.userId === user?.id) {
-      const newStart =
-        requestedStart < conflictingBookings.startTime
-          ? requestedStart
-          : conflictingBookings.startTime;
+    console.log("conflictingBookings", conflictingBookings);
 
-      const newEnd =
-        requestedEnd > conflictingBookings.endTime
-          ? requestedEnd
-          : conflictingBookings.endTime;
-
-      const updatedBooking = await prisma.booking.update({
-        where: { id: conflictingBookings.id },
-        data: {
-          startTime: newStart,
-          endTime: newEnd,
-        },
-      });
-
-      return res.status(200).json({
-        message: "Booking time extended successfully.",
-        data: updatedBooking,
-      });
-    }
-
-    if (conflictingBookings && conflictingBookings.userId !== user?.id) {
+    if (conflictingBookings) {
       return res.status(409).json({
         message: "Time slot already booked.",
       });
     }
 
+    // await prisma.customer.update({
+    //   where: { id: customer.id },
+    //   data: {
+    //     totalSpent: {
+    //       increment: totalAmount,
+    //     },
+    //   },
+    // });
+
     const booking = await prisma.booking.create({
       data: {
+        userId: user.id,
+        customerId: customer.id,
         gameId,
         date: bookingDate,
         startTime: requestedStart,
         endTime: requestedEnd,
         nets,
-        totalAmount,
+        totalAmount: totalAmount,
         status: "PENDING",
-        userId: user.id,
       },
       include: {
         game: {
@@ -274,36 +261,7 @@ export const updateBooking = async (req: Request, res: Response) => {
       },
     });
 
-    if (conflictingBookings && conflictingBookings.userId === booking.userId) {
-      const newStart =
-        requestedStart < conflictingBookings.startTime
-          ? requestedStart
-          : conflictingBookings.startTime;
-
-      const newEnd =
-        requestedEnd > conflictingBookings.endTime
-          ? requestedEnd
-          : conflictingBookings.endTime;
-
-      const updatedBooking = await prisma.booking.update({
-        where: { id: conflictingBookings.id },
-        data: {
-          startTime: newStart,
-          endTime: newEnd,
-        },
-      });
-
-      await prisma.booking.delete({
-        where: { id: booking.id },
-      });
-
-      return res.status(200).json({
-        message: "Booking time extended/updated successfully.",
-        data: updatedBooking,
-      });
-    }
-
-    if (conflictingBookings && conflictingBookings.userId !== booking.userId) {
+    if (conflictingBookings && conflictingBookings.id !== booking.id) {
       return res.status(409).json({
         message: "Time slot already booked.",
       });
@@ -481,52 +439,27 @@ export const getBookingByWeek = async (req: Request, res: Response) => {
 
 export const allUserBooking = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.userId;
+    const adminId = "1c2d5e31-f756-46b7-b0b0-5eb6fc7aabe3";
 
-    const bookings = await prisma.booking.findMany({
+    const customers = await prisma.customer.findMany({
       where: {
-        game: {
-          createdById: userId,
-        },
+        ownerId: adminId,
       },
       include: {
-        game: {
-          select: {
-            name: true,
-            id: true,
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            profile_pic: true,
-            mobileNumber: true,
-            bookings: true,
-            id: true,
+        bookings: {
+          include: {
+            game: {
+              select: {
+                name: true,
+                id: true,
+              },
+            },
           },
         },
       },
     });
 
-    const clientsWithTotalAmount = bookings.map((client) => {
-      const totalSpent = client.user?.bookings?.reduce(
-        (sum: number, booking: any) => sum + booking.totalAmount,
-        0
-      );
-
-      const { ...restUser } = client.user;
-      const { name, id } = client.game;
-
-      return {
-        ...restUser,
-        game: { name, id },
-        totalSpentAmount: totalSpent,
-      };
-    });
-
-    res
-      .status(200)
-      .json({ message: "All User Booking", clientsWithTotalAmount });
+    res.status(200).json({ message: "All User Booking", customers });
   } catch (error: any) {
     res
       .status(500)

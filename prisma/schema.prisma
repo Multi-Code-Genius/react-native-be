@@ -14,28 +14,27 @@ enum UserRole {
 }
 
 model User {
-  id               String         @id @default(uuid())
-  email            String?         @unique
-  password         String?
-  createdAt        DateTime       @default(now())
-  name             String?
-  profile_pic      String?
-  dob              DateTime?
-  mobileNumber     String         @unique
-  status           String         @default("active")
-  updatedAt        DateTime       @default(now()) @updatedAt
+  id           String    @id @default(uuid())
+  email        String?   @unique
+  password     String?
+  name         String?
+  profile_pic  String?
+  dob          DateTime?
+  mobileNumber String    @unique
+  status       String    @default("active")
+  role         UserRole? @default(user)
+
+  fcmToken         String?
+  location         Json?
+  isOnline         Boolean   @default(false)
+  lastSeen         DateTime?
   resetToken       String?
   resetTokenExpiry DateTime?
-  location         Json?
-  fcmToken         String?
-  isOnline         Boolean        @default(false)
-  lastSeen         DateTime?
+  otp              String?
+  otpExpiry        DateTime?
 
-
-  otp              String?    // OTP code
-  otpExpiry        DateTime?  // OTP expiration time
-
-  role             UserRole?       @default(user) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   comments         Comment[]
@@ -52,10 +51,12 @@ model User {
   messagesReceived Message[]       @relation("ReceiverMessages")
   bookings         Booking[]
   payments         Payment[]
+  games            Game[]          @relation("CreatedGames")
 
-  games            Game[]          @relation("CreatedGames") 
+  customersOwned   Customer[] @relation("UserCustomers") // Customers where this user is the "owner"
+  customerEntries  Customer[] @relation("UserCustomerInfo")
+  customersCreated Customer[] @relation("CreatedCustomers") // Customers created by this user
 }
-
 
 model Video {
   id          String    @id @default(uuid())
@@ -187,71 +188,70 @@ model Message {
 }
 
 model Game {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
-  images      String[]   @default([])
+  images      String[] @default([])
   category    String
   hourlyPrice Float
   capacity    Int
 
-  location    Json
-  address     String
-  gameInfo    Json?
-  net         Float?
+  location Json
+  address  String
+  gameInfo Json?
+  net      Float?
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdBy   User?        @relation("CreatedGames", fields: [createdById], references: [id])
+  createdBy   User?  @relation("CreatedGames", fields: [createdById], references: [id])
   createdById String
 
+  timeSlots TimeSlot[]
+  bookings  Booking[]
 
-  timeSlots   TimeSlot[]
-  bookings    Booking[]
+  customers Customer[] @relation("CustomerGames") // ← Add this line
 }
 
-
-
-
 model TimeSlot {
-  id         String   @id @default(uuid())
-  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId     String
-  date       DateTime
-  startTime  DateTime
-  endTime    DateTime
-  isBooked   Boolean  @default(false)
+  id        String   @id @default(uuid())
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId    String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  isBooked  Boolean  @default(false)
 
-  booking    Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  bookingId  String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId String?
 }
 
 model Booking {
-  id          String     @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId      String    
-  user        User?      @relation(fields: [userId], references: [id])
+  userId String
+  user   User?  @relation(fields: [userId], references: [id])
 
-  game        Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  gameId      String
+  game   Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId String
 
-  date        DateTime
-  startTime   DateTime
-  endTime     DateTime
-  status      BookingStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-   isCancel   Boolean     @default(false) // ✅ New column to track cancellation
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  isCancel  Boolean       @default(false)
 
   nets        Int
   totalAmount Float
 
-  payments    Payment[]
-  TimeSlot    TimeSlot[]
-}
+  payments Payment[]
+  TimeSlot TimeSlot[]
 
+  customerId String? // ✅ Add this line
+  customer   Customer? @relation(fields: [customerId], references: [id]) // ✅ Add this line
+}
 
 enum BookingStatus {
   PENDING
@@ -273,10 +273,33 @@ model Payment {
   createdAt DateTime      @default(now())
 }
 
-
 enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
   REFUNDED
+}
+
+model Customer {
+  id     String @id @default(uuid())
+  name   String
+  mobile String
+
+  userId String
+  user   User   @relation("UserCustomerInfo", fields: [userId], references: [id], onDelete: Cascade)
+
+  ownerId String
+  owner   User   @relation("UserCustomers", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("CreatedCustomers", fields: [createdById], references: [id])
+
+  bookings   Booking[]
+  games      Game[]    @relation("CustomerGames")
+  totalSpent Float     @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, createdById]) // ✅ allow same user to be customer for different clients
 }
