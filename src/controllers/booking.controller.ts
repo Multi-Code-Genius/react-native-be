@@ -438,7 +438,7 @@ export const getBookingByWeek = async (req: Request, res: Response) => {
 
 export const allUserBooking = async (req: Request, res: Response) => {
   try {
-    const adminId = "1c2d5e31-f756-46b7-b0b0-5eb6fc7aabe3";
+    const adminId = req.user?.userId || "";
 
     const customers = await prisma.customer.findMany({
       where: {
@@ -500,5 +500,34 @@ export const customer = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: error.message || "Failed to get bookings" });
+  }
+};
+
+export const suggestExistingCustomer = async (req: Request, res: Response) => {
+  try {
+    const adminId = req.user?.userId || "";
+
+    const { number } = req.params;
+
+    const customer = await prisma.customer.findUnique({
+      where: {
+        userId_createdById: {
+          userId: number,
+          createdById: adminId,
+        },
+      },
+    });
+
+    if (customer) {
+      return res
+        .status(200)
+        .json({ message: "Customer already exists", customer });
+    }
+
+    res.status(200).json({ message: "Customer does not exist" });
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to check customer" });
   }
 };
