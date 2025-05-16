@@ -98,8 +98,6 @@ export const createBooking = async (req: Request, res: Response) => {
       },
     });
 
-    console.log("conflictingBookings", conflictingBookings);
-
     if (conflictingBookings) {
       return res.status(409).json({
         message: "Time slot already booked.",
@@ -292,7 +290,7 @@ export const updateBooking = async (req: Request, res: Response) => {
     }
 
     const updated = await prisma.booking.update({
-      where: { id },
+      where: { id: booking.id },
       data: dataToUpdate,
       include: {
         game: { select: { name: true } },
