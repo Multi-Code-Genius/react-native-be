@@ -505,7 +505,10 @@ export const customer = async (req: Request, res: Response) => {
 
 export const suggestExistingCustomer = async (req: Request, res: Response) => {
   try {
+    // const adminId = "1c2d5e31-f756-46b7-b0b0-5eb6fc7aabe3";
     const adminId = req.user?.userId || "";
+
+    console.log("adminId", adminId);
     const { number } = req.params;
 
     const customers = await prisma.customer.findMany({
@@ -530,6 +533,8 @@ export const suggestExistingCustomer = async (req: Request, res: Response) => {
         },
       },
     });
+
+    console.log("customers", customers);
 
     if (customers.length === 0) {
       return res.status(404).json({ message: "No matching customers found" });

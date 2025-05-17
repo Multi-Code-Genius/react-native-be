@@ -270,7 +270,8 @@ export const sendOtp = async (req: Request, res: Response) => {
 
     // await sendOtpEmail(number, otp);
 
-    sendWhatsAppMessage(number, `OTP for Multi Code Genius is ${otp}`);
+    const message = `*${otp}* is your verification code. For your security, do not share this code.\n\nThis code expires in 05 minutes.`;
+    sendWhatsAppMessage(number, message);
 
     return res.json({
       message: "OTP sent successfully to your number. Please check your inbox.",
