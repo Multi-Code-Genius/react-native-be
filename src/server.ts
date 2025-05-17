@@ -33,7 +33,7 @@ const server = http.createServer(app);
 app.use(express.json());
 
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "https://box-software.vercel.app"],
   credentials: true,
 };
 
