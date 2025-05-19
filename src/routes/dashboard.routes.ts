@@ -15,7 +15,7 @@ dashboardRouter.get(
 
 dashboardRouter.get(
   "/export-report/:gameId",
-  // authMiddleware,
+  authMiddleware,
   exportReport as unknown as RequestHandler
 );
 
