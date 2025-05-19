@@ -1,5 +1,8 @@
 import express, { RequestHandler } from "express";
-import { getDashboardData } from "../controllers/dashboard.controller";
+import {
+  exportReport,
+  getDashboardData,
+} from "../controllers/dashboard.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
 const dashboardRouter = express.Router();
@@ -9,6 +12,52 @@ dashboardRouter.get(
   authMiddleware,
   getDashboardData as unknown as RequestHandler
 );
+
+dashboardRouter.get(
+  "/export-report/:gameId",
+  // authMiddleware,
+  exportReport as unknown as RequestHandler
+);
+
+/**
+ * @swagger
+ * /api/dashboard/export-report/{gameId}:
+ *   get:
+ *     summary: Export monthly booking report as PDF
+ *     description: Generates and returns a PDF report of bookings for a specific game ID.
+ *     tags:
+ *       - Dashboard
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: gameId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID of the game for which the report is generated
+ *       - in: query
+ *         name: month
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "2025-05"
+ *         description: Month (YYYY-MM format) to filter bookings. Defaults to current month if not provided.
+ *     responses:
+ *       200:
+ *         description: PDF file returned as a stream
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Unauthorized – Invalid or missing token
+ *       404:
+ *         description: Game not found or no bookings
+ *       500:
+ *         description: Internal server error
+ */
 
 export default dashboardRouter;
 
