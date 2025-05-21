@@ -340,9 +340,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       {
-        userId: user.id,
+        userId: user?.id,
         name: user?.name,
-        mobileNumber: user.mobileNumber,
+        mobileNumber: user?.mobileNumber,
       },
       SECRET_KEY,
       {
