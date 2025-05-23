@@ -1,6 +1,6 @@
 # 🚀 Express + TypeScript + Prisma + PostgreSQL API
 
-This project is a scalable **Express.js** backend built with **TypeScript**, **Prisma ORM**, and **PostgreSQL**. It includes authentication with **JWT**, **bcrypt** for password hashing, and follows best practices for security and logging using **helmet** and **morgan**.
+This project is a scalable **Express.js** backend built  with **TypeScript**, **Prisma ORM**, and **PostgreSQL**. It includes authentication with **JWT**, **bcrypt** for password hashing, and follows best practices for security and logging using **helmet** and **morgan**.
 
 ---
 
