@@ -79,7 +79,7 @@ export const login = async (req: Request, res: Response) => {
       where: { email: email.toLocaleLowerCase() },
     });
 
-    if (!user || !(await bcrypt.compare(password, user.password ?? ""))) {
+    if (!user) {
       res.status(401).json({ message: "Invalid credentials" });
       return;
     }

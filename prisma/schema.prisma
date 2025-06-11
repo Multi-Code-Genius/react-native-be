@@ -303,3 +303,5 @@ model Customer {
 
   @@unique([userId, createdById]) // ✅ allow same user to be customer for different clients
 }
+
+

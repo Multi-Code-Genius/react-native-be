@@ -533,8 +533,6 @@ export const suggestExistingCustomer = async (req: Request, res: Response) => {
       },
     });
 
-    console.log("customers", customers);
-
     if (customers.length === 0) {
       return res.status(404).json({ message: "No matching customers found" });
     }
@@ -544,5 +542,34 @@ export const suggestExistingCustomer = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: error.message || "Failed to suggest customers" });
+  }
+};
+
+export const bookingByUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req?.user?.userId || "";
+
+    const booking = await prisma.booking.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        game: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      return res.status(404).json;
+    }
+
+    return res.status(200).json({ booking });
+  } catch (error: any) {
+    return res
+      .status(500)
+      .json({ message: error.message || "Failed to fetch booking" });
   }
 };
